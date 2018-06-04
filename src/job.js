@@ -1,64 +1,132 @@
 //Job: an object which describes creeps basic actions
 //
 //argv[0] name = STRING (reference to a job object exported from this module)
-//argv[1] run = FUNCTION (the method run each tick by creeps with this job)
-//argv[2] init = FUNCTION (the method run by creeps when assigned this job,
+//argv[1] init = FUNCTION (the method run by creeps when assigned this job,
 //      ( mostly memory configuration))
+//argv[2] run = FUNCTION (the method run each tick by creeps with this job)
 
-function Job(name, run, init){
+function Job(name, init, run){
   this.name = name;
-  this.run = run;
   this.init = init;
+  this.run = run;
 }
 
 //  Job.prototype contains common methods creeps may preform.
-//  These methods need to called with the parent
+//  These methods need to called with the creep
 
 Job.prototype = function(){
-  function checkIsWorking(){
-    if(this.memory.working && this.carry.energy == 0){
-      this.memory.working = false;
-    }else if(!this.memory.working && this.carry.energy == this.carryCapacity){
-      this.memory.working = true;
-    }
+  function hasWorkingEnergy(){
+    //Checks and Updates if creep has enough energy to work
+    //returns updated isWorking value
 
-    return this.memory.working;
-  }
-
-  function targetActionOrIsMove(action, target){
-    if(this[action](target) == ERR_NOT_IN_RANGE){
-      this.moveTo(target);
-      return true;
+    if(this.memory.isWorking && this.carry.energy == 0){
+      this.memory.isWorking = false;
+    }else if(!this.memory.isWorking && this.carry.energy == this.carryCapacity){
+      this.memory.isWorking = true;
     }
-    return false;
+    return this.memory.isWorking;
   }
 
   return({
-    manageWorking : manageWorking,
-    targetActionOrIsMove : targetActionOrIsMove,
+    hasWorkingEnergy : hasWorkingEnergy,
   })
 }();
 
+const harvester = new Job(
+  'harvester',
+  function(creep){
+    _.assign(creep.memory, {
+      job : this.name,
+      isWorking : false,
+      workSiteId : creep.room.provideWorkSite('lowEnergy'),
+      sourceId : creep.memory.sourceId ? creep.memory.sourceId : creep.room.provideSource(),
+    })
+  },
+  function(creep){
+    if(this.hasWorkingenergy.call(creep)){
+      const lowEnergySite = Game.getObjectById(creep.memory.workSiteId);
+      switch(this.creep.transfer(lowEnergySite)){
+        case ERR_NOT_IN_RANGE : {
+          creep.moveTo(lowEnergySite);
+          break;
+        }
+      }
+    }else{
+      const source = Game.getObjectById(creep.memory.sourceId);
+      switch(this.creep.harvest(sourceId)){
+        case ERR_NOT_IN_RANGE : {
+          creep.moveTo(source);
+          break;
+        }
+      }
+    }
+  }
+)
 
 const upgrader = new Job(
   'upgrader', 
-  function(parent){
-    if(this.checkIsWorking.call(parent)){
-      this.targetActionOrIsMove.call(parent, 'upgradeController', parent.memory.target)
+  function(creep){
+    _.assign(creep.memory,{
+      job : this.name, 
+      isWorking : false,
+      workSiteId: creep.room.provideWorkSite('controller'),
+      sourceId: creep.memory.sourceId ? creep.memory.sourceId : creep.room.provideSource(),
+    })
+  },
+  function(creep){
+    if(this.hasWorkingEnergy.call(creep)){
+      const upgradeSite = Game.getObjectById(creep.memory.workSiteId);
+      switch(this.creep.upgradeController(upgradeSite)){
+        case ERR_NOT_IN_RANGE : {
+          creep.moveTo(upgradeSite);
+          break;
+        }
+      }
+    }else{
+      const source = Game.getObjectById(creep.memory.sourceId);
+      switch(this.creep.harvest(sourceId)){
+        case ERR_NOT_IN_RANGE : {
+          creep.moveTo(source);
+          break;
+        }
+      }
     }
   },
-  function(parent){
-    _.assign(parent.memory,
-      {
-        job : this.name, 
-        working : false,
-        target: parent.room.establishTarget('controller'),
-        source: parent.room.establishSource()
-      })
-  }
 );
 
+const builder = new Job(
+  'builder',
+  function(creep){
+    _.assign(creep.memory, {
+      job : this.name,
+      isWorking : false,
+      workSiteId : creep.room.provideWorkSite('constructionSite'),
+      sourceId: creep.memory.sourceId ? creep.memory.sourceId : creep.room.provideSource(),
+    })
+  },
+  function(creep){
+    if(this.hasWorkingEnergy.call(creep)){
+      const buildSite = Game.getObjectById(creep.memory.workSiteId);
+      switch(this.creep.build(buildSite)){
+        case ERR_NOT_IN_RANGE : {
+          creep.moveTo(buildSite)
+          break;
+        }
+      }
+    }else{
+      const source = Game.getObjectById(creep.memory.sourceId);
+      switch(this.creep.harvest(sourceId)){
+        case ERR_NOT_IN_RANGE : {
+          creep.moveTo(source);
+          break;
+        }
+      }
+    }
+  }
+)
 
 module.exports = {
-  upgrader : updrader,
+  harvester : harvester,
+  upgrader : upgrader,
+  builder : builder,
 }
