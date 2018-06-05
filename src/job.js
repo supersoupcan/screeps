@@ -15,6 +15,11 @@ function Job(name, init, run){
 //  These methods need to called with the creep
 
 Job.prototype = function(){
+  function revoke(){
+
+  }
+
+
   function hasWorkingEnergy(){
     //Checks and Updates if creep has enough energy to work
     //returns updated isWorking value
@@ -39,13 +44,13 @@ const harvester = new Job(
       job : this.name,
       isWorking : false,
       workSiteId : creep.room.provideWorkSite('lowEnergy'),
-      sourceId : creep.memory.sourceId ? creep.memory.sourceId : creep.room.provideSource(),
+      sourceId : creep.memory.sourceId ? creep.memory.sourceId : creep.room.provideSource(creep),
     })
   },
   function(creep){
     if(this.hasWorkingenergy.call(creep)){
       const lowEnergySite = Game.getObjectById(creep.memory.workSiteId);
-      switch(this.creep.transfer(lowEnergySite)){
+      switch(creep.transfer(lowEnergySite)){
         case ERR_NOT_IN_RANGE : {
           creep.moveTo(lowEnergySite);
           break;
@@ -53,7 +58,7 @@ const harvester = new Job(
       }
     }else{
       const source = Game.getObjectById(creep.memory.sourceId);
-      switch(this.creep.harvest(sourceId)){
+      switch(creep.harvest(sourceId)){
         case ERR_NOT_IN_RANGE : {
           creep.moveTo(source);
           break;
@@ -64,7 +69,7 @@ const harvester = new Job(
 )
 
 const upgrader = new Job(
-  'upgrader', 
+  'upgrader',
   function(creep){
     _.assign(creep.memory,{
       job : this.name, 
@@ -76,7 +81,7 @@ const upgrader = new Job(
   function(creep){
     if(this.hasWorkingEnergy.call(creep)){
       const upgradeSite = Game.getObjectById(creep.memory.workSiteId);
-      switch(this.creep.upgradeController(upgradeSite)){
+      switch(creep.upgradeController(upgradeSite)){
         case ERR_NOT_IN_RANGE : {
           creep.moveTo(upgradeSite);
           break;
@@ -84,7 +89,7 @@ const upgrader = new Job(
       }
     }else{
       const source = Game.getObjectById(creep.memory.sourceId);
-      switch(this.creep.harvest(sourceId)){
+      switch(creep.harvest(sourceId)){
         case ERR_NOT_IN_RANGE : {
           creep.moveTo(source);
           break;
@@ -107,7 +112,7 @@ const builder = new Job(
   function(creep){
     if(this.hasWorkingEnergy.call(creep)){
       const buildSite = Game.getObjectById(creep.memory.workSiteId);
-      switch(this.creep.build(buildSite)){
+      switch(creep.build(buildSite)){
         case ERR_NOT_IN_RANGE : {
           creep.moveTo(buildSite)
           break;
@@ -115,7 +120,7 @@ const builder = new Job(
       }
     }else{
       const source = Game.getObjectById(creep.memory.sourceId);
-      switch(this.creep.harvest(sourceId)){
+      switch(creep.harvest(sourceId)){
         case ERR_NOT_IN_RANGE : {
           creep.moveTo(source);
           break;
