@@ -48,6 +48,6 @@ function Role(name, bodyRecipe, jobs){
   this.jobs = jobs;
 }
 
-const worker = new Role('worker', [CARRY, WORK], ['moveResource']);
+const worker = new Role('worker', [CARRY, WORK], ['mover']);
 
 module.exports.worker = worker;

@@ -5,13 +5,23 @@ Rooms are declared either Master or Resource.
 Master Rooms have extensions, and processing facility and own/spawn their own creeps.
 Resource Rooms are owned by specific Master Rooms and provide strategic Resource Extraction
 
-Each Master Room has a development index (di) which determines how many creeps of each role to spawn.
+Each Master Room has a development index (di) Object in memory, which determines how many creeps of each role to spawn.
 
-The developmental index (di) also determines what the goals of those creeps are.
+Each Master Room has an Goal Object in Memory which determines the current Goals. 
 
-Goals have a dynmaic priority value from 1 to 10, which determines the order they are assigned based on the state of the room;
 
-ex: this.goal["harvest"].priority will return a higher value if the extensions need energy;
+room.memory.goals[goalId] = {
+  goal : "maintainEnergy",
+  argv : []
+}
+
+
+
+The developmental index (di) also determines what the goals of those creeps are at any given index;
+
+Goals have a dynmaic priority value, which determines the order they are assigned based on the state of the room;
+
+ex: goal.mantainEnergy.priority will return a higher value if the extensions need energy;
 
 
 Each job defines a loop between resource and worksite;

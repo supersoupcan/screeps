@@ -1,23 +1,38 @@
 const job = require('job');
 
-function Goal(name, resource, worksite, priority){
+function Goal(room, name, role, isCompletable, job){
+  this.room = room;
   this.name = name;
+  this.role = role;
+  this.isCompletable = isCompletable;
+  //this.findPriority = findPriority;
 }
 
 Goal.prototype = function(){
-  return({
+  function initMemory(){
+    
+  }
 
+  function assign(creep){
+
+  }
+
+  return({
+    init : init,
   })
 }
 
+const maintainEnergy = new Goal('maintainEnergy', 'worker', false, job.harvester);
 
+
+
+
+
+
+/*
 let harvest = {
   completable : false,
-  extract : Creep.harvest,
-  work : Creep.transfer,
-  job : jobs[harvester],
-  resource : RESOURCE_ENERGY,
-  workSite : STRUCTURE_SPAWN || STRUCTURE_EXTENSIONS,
+  transfer : RESROUCE_ENERGY,
   priority : function(room){
     const passive = 4;
     (10 - room.energyAvailable / room.energyCapacityAvailable *10) + passive;
@@ -51,3 +66,5 @@ let upgrade = {
 
   }
 }
+
+*/

@@ -1,24 +1,59 @@
-//Job: an object which describes creeps basic actions
-//
-//argv[0] name = STRING (reference to a job object exported from this module)
-//argv[1] init = FUNCTION (the method run by creeps when assigned this job,
-//      ( mostly memory configuration))
-//argv[2] run = FUNCTION (the method run each tick by creeps with this job)
-
-function Job(name, init, run){
-  this.name = name;
-  this.init = init;
-  this.run = run;
-}
-
-//  Job.prototype contains common methods creeps may preform.
-//  These methods need to called with the creep
+function Job(goalId){
+  this.goalId = goalId;
+};
 
 Job.prototype = function(){
-  function revoke(){
 
+  return({
+
+  })
+}
+
+const ExtractorMover = function(goalId, name, extract, resource, work, destination){
+  Job.call(this, goalId);
+  this.name = name;
+  this.extract = extract;
+  this.resource = resource;
+  this.work = work;
+  this.destination = destination;
+}
+
+Mover.prototype = Object.create(Job.prototype, function(){
+  function hasCargo(creep){
+    if(creep.memory.isWorking && creep.carry[this.resource] == 0){
+      creep.memory.isWorking = false;
+    }else{
+
+    }
   }
 
+  function run(creep){
+    this.extract.call(creep);
+  }
+
+  function init(creep){
+    Object.assign(creep.memory, {
+      job : this.name,
+      isWorking : false,
+      workSiteId : findWorkSite(),
+      extractSite : findResource(),
+    })
+  }
+
+  return({
+    run : run,
+    init : init,
+  })
+});
+
+ExtractorMover.prototype.constructor = ExtractorMover;
+
+
+let harvester = function(goalId){
+  new ExtractorMover(Creep.harvest, RESOURCE_ENERGY, Creep.transfer, STRUCTURE_CONTROLLER)
+}
+  
+/*
 
   function hasWorkingEnergy(){
     //Checks and Updates if creep has enough energy to work
@@ -135,3 +170,5 @@ module.exports = {
   upgrader : upgrader,
   builder : builder,
 }
+
+*/

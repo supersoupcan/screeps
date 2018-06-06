@@ -1,5 +1,6 @@
 const role = require('role');
 const job = require('job');
+const goal = require('goal');
 
 module.exports = function(){
   function init(){
@@ -7,16 +8,15 @@ module.exports = function(){
     _.forEach(this.find(FIND_SOURCES), function(source){
       source.init();
     })
-
+    
     */
 
-    this.memory.goals = {};
-
-
+   this.addGoal(goal.maintainEnergy); 
   }
 
-  function addGoal(role, ){
-
+  function addGoal(goal){
+    const id = _.uniqueId('goal_');
+    this.memory.goals[uniqueId] =
   }
 
 
