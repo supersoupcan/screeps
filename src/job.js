@@ -1,43 +1,54 @@
-function Job(goalId){
-  this.goalId = goalId;
+function Job(role){
+  this.role = role;
 };
 
 Job.prototype = function(){
-
   return({
 
   })
 }
 
-const ExtractorMover = function(goalId, name, extract, resource, work, destination){
-  Job.call(this, goalId);
+const ExtractorMover = function(name, extract, resource, work, workSite){
+  Job.call(this, 'worker');
   this.name = name;
   this.extract = extract;
   this.resource = resource;
   this.work = work;
-  this.destination = destination;
+  this.workSite = workSite;
 }
 
-Mover.prototype = Object.create(Job.prototype, function(){
-  function hasCargo(creep){
-    if(creep.memory.isWorking && creep.carry[this.resource] == 0){
-      creep.memory.isWorking = false;
-    }else{
+ExtractorMover.prototype = Object.create(Job.prototype, function(){
+  function init(creep, config){
+    Object.assign(creep.memory, {
+      job : this.name,
+      isExtracting : true,
+      workSiteId : findWorkSite(),
+      extractSiteId : findResource(),
+    })
+  }
 
+  function isExtracting(creep){
+    if(creep.memory.isExtracting && creep.carry[creep.resource] == creep.carryCapacity){
+      creep.memory.isExtracting = false;
     }
+    else if(!creep.memory.isExtracting && creep.carry[creep.resource] == 0){
+      //Signal goal check
+      creep.memory.isExtracting = true;
+    }
+
+    return creep.memory.isExtracting;
   }
 
   function run(creep){
-    this.extract.call(creep);
-  }
+    if(isExtracting(creep)){
+      switch(this.extract.call(creep)){
+        case "ERR_NOT_IN_RANGE" : {
+          creep.moveTo(Game.getObjectById(creep.memory.extractionSiteId));
+        }
+      }
+    }else{
 
-  function init(creep){
-    Object.assign(creep.memory, {
-      job : this.name,
-      isWorking : false,
-      workSiteId : findWorkSite(),
-      extractSite : findResource(),
-    })
+    }
   }
 
   return({
@@ -46,13 +57,11 @@ Mover.prototype = Object.create(Job.prototype, function(){
   })
 });
 
+
 ExtractorMover.prototype.constructor = ExtractorMover;
 
+let harvester = new ExtractorMover('harvester', Creep.harvest, RESOURCE_ENERGY, Creep.transfer, STRUCTURE_CONTROLLER)
 
-let harvester = function(goalId){
-  new ExtractorMover(Creep.harvest, RESOURCE_ENERGY, Creep.transfer, STRUCTURE_CONTROLLER)
-}
-  
 /*
 
   function hasWorkingEnergy(){

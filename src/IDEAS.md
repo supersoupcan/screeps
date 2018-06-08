@@ -9,20 +9,26 @@ Each Master Room has a development index (di) Object in memory, which determines
 
 Each Master Room has an Goal Object in Memory which determines the current Goals. 
 
-
-room.memory.goals[goalId] = {
-  goal : "maintainEnergy",
-  argv : []
-}
-
-
-
 The developmental index (di) also determines what the goals of those creeps are at any given index;
 
 Goals have a dynmaic priority value, which determines the order they are assigned based on the state of the room;
 
 ex: goal.mantainEnergy.priority will return a higher value if the extensions need energy;
 
+Create a Custom Goal Object,
+
+A Goal Object tells the room it needs a specific job preformed/
+A Goal Object has a method which determines goal priority.
+A Goal Object tells the room if this job can be completed.
+If a Goal can be completed, the Goal Object tells the room ( or creep?) when the goal has been completed;
+
+Goal Object tells the creep and room what to do when the job is completed;
+
+Goal Object takes an override function, which creates an override object in memory, which gets used to explicitly determine aspects of job behaviour.
+
+ex: A build goals may want to specify a specific target to build, instead of allowing the job to dermine this automatically.
+
+The job checks it's goals override method, before acting;
 
 Each job defines a loop between resource and worksite;
 

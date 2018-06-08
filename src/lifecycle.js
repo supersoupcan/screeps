@@ -13,7 +13,8 @@ module.exports = function(){
         if(!creep.memory.jobName){
           creep.room.findJob(creep);
         }
-        _.assign(creep, job[creep.memory.jobName])
+
+        //_.assign(creep, job[creep.memory.jobName])
         
         
         //creep.init();
@@ -22,11 +23,13 @@ module.exports = function(){
   }
 
   function manageRooms(){
-    _forEach(Game.rooms, function(room, index){
+    _.forEach(Game.rooms, function(room, key){
       if(room.memory === null){
         room.init();
       }
-    })
+
+      room.manageGoals();
+    });
   }
 
   return({

@@ -45,9 +45,8 @@ Body.prototype = {
 function Role(name, bodyRecipe, jobs){
   this.name = name;
   this.body = new Body(bodyRecipe);
-  this.jobs = jobs;
 }
 
-const worker = new Role('worker', [CARRY, WORK], ['mover']);
+const worker = new Role('worker', [CARRY, WORK]);
 
 module.exports.worker = worker;

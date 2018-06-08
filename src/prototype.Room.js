@@ -10,15 +10,40 @@ module.exports = function(){
     })
     
     */
-
-   this.addGoal(goal.maintainEnergy); 
+   addGoal.call(this), goal['maintainGoals', ''];
   }
 
   function addGoal(goal){
-    const id = _.uniqueId('goal_');
-    this.memory.goals[uniqueId] =
+    goal.init(room);
   }
 
+  function checkForNewJob(creep){
+    let currentGoal = goalToBeat(){
+      
+    }
+    //
+    _.forEach(this.memory.goal, function(goalMemory, goalId){
+      //If goal is currentGoal
+      const goalData = goal[goalMemory.name];
+
+      if(goalData.job.role === creep.role){
+        if(_.includes(goalMemory.assigned, creep.name)){
+
+        }else if(goalMemory.assigned.length < goalData.maximum){
+
+        }
+      }
+
+      if(goalData.job.role === creep.role){
+        goalData.getPriority(this);
+      }
+
+      //if(_.includes(goalMemory.assigned, creep.name)){}
+
+
+      
+    })
+  }
 
   function provideWorkSite(type){
     //Kind of worksites we expect
@@ -47,9 +72,10 @@ module.exports = function(){
 
   return{
     init : init,
-    provideWorkSite : provideWorkSite,
-    provideSource : provideSource,
-    findJob : findJob,
-    strategy : strategy,
+    manageGoals : manageGoals,
+    //provideWorkSite : provideWorkSite,
+    //provideSource : provideSource,
+    //findJob : findJob,
+    //strategy : strategy,
   }
 }();

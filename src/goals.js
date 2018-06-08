@@ -1,70 +1,82 @@
-const job = require('job');
-
-function Goal(room, name, role, isCompletable, job){
-  this.room = room;
+const Goal = function(name, job, proirity, config){
   this.name = name;
-  this.role = role;
-  this.isCompletable = isCompletable;
-  //this.findPriority = findPriority;
+  this.job = job;
+  this.priority = priority;
+  this.override = config.override || function(){
+    return ({})
+  };
+  this.maximum = config.maximum || null;
+  this.onCompletion = config.onComplettion || null;
 }
 
 Goal.prototype = function(){
-  function initMemory(){
-    
+  function init(room, override){
+    const config = this.override.apply(this, override);
+    const uniqueId = _.uniqueId('goal_');
+    room.memory.goal[unqiueId] = Object.assign({
+      goal : this.name,
+      assigned : [],
+      }, 
+      {
+        override : override
+      }
+    )
   }
-
-  function assign(creep){
-
-  }
-
-  return({
+  return ({
     init : init,
   })
+}();
+
+const Priority = function(){
+
 }
 
-const maintainEnergy = new Goal('maintainEnergy', 'worker', false, job.harvester);
+const maintainEnergy = new Goal(
+  'maintainEnergy',
+  job.harvester,
+  function(){
+    return 5;
+  },{
 
+  }
+)
 
-
-
-
-
-/*
-let harvest = {
-  completable : false,
-  transfer : RESROUCE_ENERGY,
-  priority : function(room){
-    const passive = 4;
-    (10 - room.energyAvailable / room.energyCapacityAvailable *10) + passive;
+const maintainController = new Goal(
+  'maintainController',
+  job.upgrader,
+  function(room){
+    return 5;
   },
-}
+)
 
-let maintainController = {
-  completable : false,
-  extract : Creep.harvest,
-  work : Creep.upgradeController,
-  job : jobs[harvester],
-  resource : RESOURCE_ENERGY,
-  workSite : STRUCTURE_CONTROLLER,
-  priority : function(room){
-    const controller = room.controller;
-    const passive = -5;
-    const factor = 2;
-    ((10 - controller.ticksToDownGrade / CONTROLLER_DOWNGRADE[controller.level] * 10) 
-      - passive) * factor;
+const upgradeController = new Goal(
+  'upgradeController',
+  job.upgrader,
+  function(room){
+    return 5;
+  },
+  {
+    maximum : 1
   }
-}
+)
 
-let upgrade = {
-  completable : true,
-  extract : Creep.harvest,
-  work : Creep.upgradeController,
-  job : jobs[harvester],
-  resource : RESOURCE_ENERGY,
-  workSite : SRUCTURE_CONTROLLER,
-  prority : function(room){
-
+const buildSite = new Goal(
+  'buildSite',
+  job.builder,
+  function(room){
+    return 5;
+  },
+  {
+    override : function(constructionSiteId){
+      return ({
+        workSiteId : constructionSiteId,
+      })
+    },
+    onCompletion : function(){
+      //DELETE?
+    }
   }
-}
+)
 
-*/
+// A Priority takes in the current room of the goal, and runs an equation to see
+// how important a given goal is at any point.
