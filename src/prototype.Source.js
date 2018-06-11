@@ -1,10 +1,8 @@
 const utils = require('utils');
 
 module.exports = function(){
-  let memory = this.room.memory.source[this.id];
-
   function init(){
-    memory = {
+    this.room.memory.source[this.id] = {
       isSafe : this.isSafe(),
       spots : this.avaliableSpots(),  
     }

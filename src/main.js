@@ -2,6 +2,8 @@
 
 require('extendPrototypes');
 
+const lifecycle = require('lifecycle');
+
 module.exports.loop = function(){
-  lifeCycle.main();
+  lifecycle.main();
 }

@@ -14,7 +14,7 @@ module.exports = function(){
   }
 
   function addGoal(goal){
-    goal.init(room);
+    goal.init(this);
   }
 
   function checkForNewJob(creep){
@@ -67,7 +67,7 @@ module.exports = function(){
 
   function provideSource(creep){
     let openSourceId = false;
-    _.forEach(room.memory.sources, function(source, sourceId){
+    _.forEach(this.memory.sources, function(source, sourceId){
       if(source.isSafe){
         _.forEach(source.spots, function(spot){
           if(!spot.assigned){
@@ -84,14 +84,7 @@ module.exports = function(){
     });
   }
 
-
-
-  return{
+  return({
     init : init,
-    manageGoals : manageGoals,
-    //provideWorkSite : provideWorkSite,
-    //provideSource : provideSource,
-    //findJob : findJob,
-    //strategy : strategy,
-  }
+  })
 }();

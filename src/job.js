@@ -1,15 +1,5 @@
-function Job(role){
-  this.role = role;
-};
-
-Job.prototype = function(){
-  return({
-
-  })
-}
-
 const ExtractorMover = function(name, extract, resource, work, workSite){
-  Job.call(this, 'worker');
+  this.role = 'worker';
   this.name = name;
   this.extract = extract;
   this.resource = resource;
@@ -17,7 +7,7 @@ const ExtractorMover = function(name, extract, resource, work, workSite){
   this.workSite = workSite;
 }
 
-ExtractorMover.prototype = Object.create(Job.prototype, function(){
+ExtractorMover.prototype = function(){
   function init(creep, goalMemory){
     creep.memory = Object.assign({},
       {
@@ -74,6 +64,7 @@ ExtractorMover.prototype = Object.create(Job.prototype, function(){
         case "ERR_NOT_IN_RANGE" : {
           creep.moveTo(workSite);
           break;
+        }
       }
     }
   }
@@ -82,7 +73,7 @@ ExtractorMover.prototype = Object.create(Job.prototype, function(){
     run : run,
     init : init,
   })
-});
+}();
 
 
 ExtractorMover.prototype.constructor = ExtractorMover;

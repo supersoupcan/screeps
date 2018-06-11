@@ -1,4 +1,6 @@
-const Goal = function(name, job, proirity, config){
+const job = require('job');
+
+const Goal = function(name, job, priority, config){
   this.name = name;
   this.job = job;
   this.priority = priority;
@@ -29,18 +31,13 @@ Goal.prototype = function(){
   })
 }();
 
-const Priority = function(){
-
-}
 
 const maintainEnergy = new Goal(
   'maintainEnergy',
   job.harvester,
-  function(){
+  function(room){
     return 5;
-  },{
-
-  }
+  },{}
 )
 
 const maintainController = new Goal(
@@ -52,6 +49,8 @@ const maintainController = new Goal(
     maximum : 1
   }
 )
+
+/*
 
 const upgradeController = new Goal(
   'upgradeController',
@@ -78,6 +77,7 @@ const buildSite = new Goal(
     }
   }
 )
+*/
 
 // A Priority takes in the current room of the goal, and runs an equation to see
 // how important a given goal is at any point.
