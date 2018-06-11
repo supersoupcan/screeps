@@ -4,11 +4,11 @@ module.exports = function(){
   function init(){
     this.room.memory.source[this.id] = {
       isSafe : this.isSafe(),
-      maxCapacity : this.maxCapacity(),
+      spots : this.avaliableSpots(),  
     }
   }
 
-  function configureCapacity(){
+  function availableSpots(){
     const capacityData = utils.lookAround(this, 1, function(tile){
       return _.every(tile, function(object){
         switch(object.type){
@@ -31,7 +31,7 @@ module.exports = function(){
       }
     })
     return _.times(capacity, _.constant({
-      assignedCreepName : null,
+      assigned : false,
     }))
   }
 

@@ -8,6 +8,8 @@ Place an intial start, and have the rest go automatically, although we will prob
 
 ## Design Philosophy
 
+Use grunt-screeps to push git versions to screeps game folder
+
 Extend every Game Object with our own methods and our own Objects
 Document use of our own Constructors
 Use Memory and CPU liberally during initial development
@@ -16,8 +18,13 @@ Use GitHub branches for adding experimental features
 Push to GitHub at the end of every work session
 Test extensively in Game before merging experimental branches
 
+use game constants when available and id/name hashlists for storing memory;
+ex: room.memory[STRUCTURE_SPAWN][spawnName];
+
 ## Key Features
-Dynamically reasses jobs based on body type (role) and job priority
+Dynamically reasses jobs based on goal priority
+Creep body ratios and jobs determined by role
+
 
 ## TO DO
 

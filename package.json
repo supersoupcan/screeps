@@ -1,0 +1,27 @@
+{
+  "name": "screeps",
+  "version": "1.0.0",
+  "description": "my screeps scripts",
+  "main": "src/main.js",
+  "scripts": {
+    "test": "test",
+    "grunt" : "grunt screeps"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/supersoupcan/screeps.git"
+  },
+  "keywords": [
+    "screeps"
+  ],
+  "author": "Jacob Sloots",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/supersoupcan/screeps/issues"
+  },
+  "homepage": "https://github.com/supersoupcan/screeps#readme",
+  "devDependencies": {
+    "grunt": "^1.0.3",
+    "grunt-screeps": "^1.4.0"
+  }
+}

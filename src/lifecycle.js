@@ -8,15 +8,13 @@ module.exports = function(){
   }
 
   function manageCreeps(){
-    _.forEach(Game.creeps, function(creep, index){
-      if(creep.memory === null){
-        creep.init();
-      }
+    _.forEach(Game.creeps, function(creep, creepName){
       if(!creep.spawning){
         if(!creep.memory.jobName){
-          creep.setJob();
+          creep.room.findJob(creep);
         }
-        _.assign(creep, job[creep.memory.jobName])
+
+        //_.assign(creep, job[creep.memory.jobName])
         
         
         //creep.init();
@@ -25,11 +23,13 @@ module.exports = function(){
   }
 
   function manageRooms(){
-    _forEach(Game.rooms, function(room, index){
+    _.forEach(Game.rooms, function(room, key){
       if(room.memory === null){
         room.init();
       }
-    })
+      
+      //room.manageGoals();
+    });
   }
 
   return({
