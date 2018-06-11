@@ -27,8 +27,8 @@ module.exports = function(){
       if(room.memory === null){
         room.init();
       }
-
-      room.manageGoals();
+      
+      //room.manageGoals();
     });
   }
 

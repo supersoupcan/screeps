@@ -3,14 +3,14 @@ const job = require('job');
 const goal = require('goal');
 
 module.exports = function(){
-  function init(){
-    /*
+  function init(isMaster){
+    if(true){
+      //STRATEGY MODULE;
+    }
+
     _.forEach(this.find(FIND_SOURCES), function(source){
       source.init();
     })
-    
-    */
-   addGoal.call(this), goal['maintainGoals', ''];
   }
 
   function addGoal(goal){
@@ -18,41 +18,55 @@ module.exports = function(){
   }
 
   function checkForNewJob(creep){
-    let currentGoal = goalToBeat(){
-      
+    let goalToBeat = {
+      goalId : null,
+      priority : -1,
     }
-    //
+
+    let currentGoalId = null;
+
+    function higherPriority(goalDataToCheck, goalId){
+      const priority = goalDataToCheck.priority(this);
+      if(priority > goalToBeat.priority){
+        goalToBeat = {
+          goalId : goalId,
+          priority : priority
+        }
+      }
+    }
+
     _.forEach(this.memory.goal, function(goalMemory, goalId){
       //If goal is currentGoal
       const goalData = goal[goalMemory.name];
 
       if(goalData.job.role === creep.role){
         if(_.includes(goalMemory.assigned, creep.name)){
-
+          currentGoalId = goalId;
+          higherPriority(goalData, goalId);
         }else if(goalMemory.assigned.length < goalData.maximum){
-
+          higherPriority(goalData, goalId);
         }
       }
-
-      if(goalData.job.role === creep.role){
-        goalData.getPriority(this);
-      }
-
-      //if(_.includes(goalMemory.assigned, creep.name)){}
-
-
-      
     })
-  }
 
-  function provideWorkSite(type){
-    //Kind of worksites we expect
-    //Controllers
-    //Low Energy Buidlings
+    if(goalToBeat.goalId !== currentGoalId){
+      if(currentGoalId){
+        _.remove(this.memory.goal[currentGoalId].assigned, function(creepName){
+          return creepName === creep.name;
+        })
+      }
+      if(jobToBeat.goalId){
+        const nextGoalMemory = this.memory.goal[jobToBeat.goalId];
+        const nextGoalData = goal[nextGoalMemory.name];
+
+        nextGoalMemory.assigned.push(creep.name);
+        nextGoalData.job.init(creep, nextGoalMemory.override);
+      }
+    }
   }
 
   function provideSource(creep){
-    let openSpot = false;
+    let openSourceId = false;
     _.forEach(room.memory.sources, function(source, sourceId){
       if(source.isSafe){
         _.forEach(source.spots, function(spot){
@@ -61,14 +75,16 @@ module.exports = function(){
               assigned : true,
               name : creep.name,
             };
-            openSource = sourceId;
+            openSourceId = sourceId;
             return false;
           }
         })
       }
-      return openSource;
-    })
+      return openSourceId;
+    });
   }
+
+
 
   return{
     init : init,

@@ -2,16 +2,13 @@ const Goal = function(name, job, proirity, config){
   this.name = name;
   this.job = job;
   this.priority = priority;
-  this.override = config.override || function(){
-    return ({})
-  };
-  this.maximum = config.maximum || null;
-  this.onCompletion = config.onComplettion || null;
+  this.override = config.override || function(){return({})};
+  this.maximum = config.maximum || 100;
 }
 
 Goal.prototype = function(){
-  function init(room, override){
-    const config = this.override.apply(this, override);
+  function init(room, overrideArgsArr){
+    const config = this.override.apply(this, overrideArgsArr);
     const uniqueId = _.uniqueId('goal_');
     room.memory.goal[unqiueId] = Object.assign({
       goal : this.name,
@@ -22,6 +19,11 @@ Goal.prototype = function(){
       }
     )
   }
+
+  function onCompletion(){
+    //Something;
+  }
+
   return ({
     init : init,
   })
@@ -46,7 +48,9 @@ const maintainController = new Goal(
   job.upgrader,
   function(room){
     return 5;
-  },
+  },{
+    maximum : 1
+  }
 )
 
 const upgradeController = new Goal(
@@ -67,13 +71,10 @@ const buildSite = new Goal(
     return 5;
   },
   {
-    override : function(constructionSiteId){
-      return ({
-        workSiteId : constructionSiteId,
+    override : function(buildSiteId){
+      return({
+        workSiteId : buildSiteId,
       })
-    },
-    onCompletion : function(){
-      //DELETE?
     }
   }
 )

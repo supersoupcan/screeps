@@ -18,13 +18,33 @@ const ExtractorMover = function(name, extract, resource, work, workSite){
 }
 
 ExtractorMover.prototype = Object.create(Job.prototype, function(){
-  function init(creep, config){
-    Object.assign(creep.memory, {
-      job : this.name,
-      isExtracting : true,
-      workSiteId : findWorkSite(),
-      extractSiteId : findResource(),
+  function init(creep, goalMemory){
+    creep.memory = Object.assign({},
+      {
+        role : creep.memory.role,
+        isExtracting : true,
+        extractionSiteId : this.findExtractionSite(creep),
+        workSiteId : this.findWorkSite(creep),
+      },
+      goalMemory.override
+    )
+  }
+
+  function findExtractionSite(creep){
+    switch(this.resource){
+      case RESOURCE_ENERGY : {
+        return creep.room.provideSource(creep)
+        break;
+      }
+    }
+  }
+
+  function findWorkSite(creep){
+    let workSites = this.creep.room.find(creep.workSite.find, {
+      filter : creep.workSite.filter
     })
+
+    return workSites[_.random(workSites.length)].id;
   }
 
   function isExtracting(creep){
@@ -32,7 +52,7 @@ ExtractorMover.prototype = Object.create(Job.prototype, function(){
       creep.memory.isExtracting = false;
     }
     else if(!creep.memory.isExtracting && creep.carry[creep.resource] == 0){
-      //Signal goal check
+      console.log(creep.name + ' completing job loop');
       creep.memory.isExtracting = true;
     }
 
@@ -41,13 +61,20 @@ ExtractorMover.prototype = Object.create(Job.prototype, function(){
 
   function run(creep){
     if(isExtracting(creep)){
-      switch(this.extract.call(creep)){
+      const extractionSite = Game.getObjectById(creep.memory.extractionSiteId);
+      switch(this.extract.call(creep, extractionSite)){
         case "ERR_NOT_IN_RANGE" : {
-          creep.moveTo(Game.getObjectById(creep.memory.extractionSiteId));
+          creep.moveTo(extractionSite);
+          break;
         }
       }
     }else{
-
+      const workSite = Game.getObjectById(creep.memory.workSiteId);
+      switch(this.work.call(creep, workSite)){
+        case "ERR_NOT_IN_RANGE" : {
+          creep.moveTo(workSite);
+          break;
+      }
     }
   }
 
@@ -60,7 +87,37 @@ ExtractorMover.prototype = Object.create(Job.prototype, function(){
 
 ExtractorMover.prototype.constructor = ExtractorMover;
 
-let harvester = new ExtractorMover('harvester', Creep.harvest, RESOURCE_ENERGY, Creep.transfer, STRUCTURE_CONTROLLER)
+let harvester = new ExtractorMover(
+  'harvester', 
+  Creep.harvest, 
+  RESOURCE_ENERGY, 
+  Creep.transfer, 
+  {
+    find : FIND_MY_STRUCTURES,
+    filter : function(structure){
+      if(structure.type === STRUCTURE_EXTENSION || structure.type === STRUCTURE_SPAWN){
+        return (structure.energy < structure.energyCapacity);
+      }else{
+        return false;
+      }
+    }
+  }
+);
+
+let builder = new ExtractorMover(
+  'builder',
+  Creep.harvest,
+  RESOURCE_ENERGY,
+  Creep.build,
+  {
+    find : FIND_MY_CONSTRUCTION_SITES,
+  }
+)
+
+module.exports = {
+  builder : builder,
+  harvester : harvester,
+}
 
 /*
 
