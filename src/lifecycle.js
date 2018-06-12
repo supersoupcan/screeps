@@ -24,7 +24,7 @@ module.exports = function(){
 
   function manageRooms(){
     _.forEach(Game.rooms, function(room, key){
-      if(room.memory === null){
+      if(_.isEmpty(room.memory)){
         room.init();
       }
       

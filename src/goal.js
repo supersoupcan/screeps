@@ -4,26 +4,30 @@ const Goal = function(name, job, priority, config){
   this.name = name;
   this.job = job;
   this.priority = priority;
-  this.override = config.override || function(){return({})};
+  this.argvs = config.argvs || [];
   this.maximum = config.maximum || 100;
 }
 
 Goal.prototype = function(){
-  function init(room, overrideArgsArr){
-    const config = this.override.apply(this, overrideArgsArr);
-    const uniqueId = _.uniqueId('goal_');
-    room.memory.goal[unqiueId] = Object.assign({
+  function init(room){
+
+    /*Add override later
+    //let override = {};
+    //if(overrideArgsArr){
+      //override = this.override.apply(this, overrideArgsArr);
+    //}
+
+    const uniqueId = _.uniqueId(this.name + '_');
+    room.memory.goal[uniqueId] = Object.assign({
       goal : this.name,
+      argvs : this.argvs,
       assigned : [],
-      }, 
-      {
-        override : override
-      }
-    )
+    })
+    */
   }
 
   function onCompletion(){
-    //Something;
+    //Something;  
   }
 
   return ({
@@ -33,7 +37,7 @@ Goal.prototype = function(){
 
 
 const maintainEnergy = new Goal(
-  'maintainEnergy',
+  'maintain_energy',
   job.harvester,
   function(room){
     return 5;
@@ -41,7 +45,7 @@ const maintainEnergy = new Goal(
 )
 
 const maintainController = new Goal(
-  'maintainController',
+  'maintain_controller',
   job.upgrader,
   function(room){
     return 5;
@@ -49,6 +53,32 @@ const maintainController = new Goal(
     maximum : 1
   }
 )
+
+const upgradeController = new Goal(
+  'upgrade_controller',
+  job.upgrader,
+)
+
+let BuildConstructionSites = function(structureType, basePriority){
+  Goal.call(
+    this, 
+    'builder_' + structureType,
+    new job.Builder(structureType),
+    function(room){
+      return basePriority;
+    },
+  )
+}
+
+//upgrade controller has a low priority, 
+//to ensure that other jobs are done first
+
+module.exports = {
+  maintain_energy : maintainEnergy,
+  maintain_controller : maintainController,
+  upgrade_controller : upgradeController,
+  BuildConstructionSites : BuildConstructionSites,
+}
 
 /*
 

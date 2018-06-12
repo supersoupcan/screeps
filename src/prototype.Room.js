@@ -1,22 +1,46 @@
 const role = require('role');
 const job = require('job');
 const goal = require('goal');
+const plan = require('plan');
 
 module.exports = function(){
-  function init(isMaster){
-    if(true){
-      //STRATEGY MODULE;
-    }
+  function init(){
+    this.memory.queue = [];
+    this.memory.goal = {};
+    this.memory.source = {};
 
     _.forEach(this.find(FIND_SOURCES), function(source){
       source.init();
     })
   }
 
-  function addGoal(goal){
-    goal.init(this);
+  function addToQueue(rolename){
+    this.memory.queue.push(rolename)
   }
 
+  function initGoals(){
+    
+  }
+
+  function checkForNewJob(){
+    let currentGoals = plan[this.controller.level].goals;
+
+    let goalToBeat = {
+      goalName = null,
+      piority = -1
+    }
+
+    let currentGoalName = null;
+
+    _.forEach(currentGoals, function(goal, index){
+
+    })
+
+  }
+
+
+
+  /*
   function checkForNewJob(creep){
     let goalToBeat = {
       goalId : null,
@@ -64,6 +88,7 @@ module.exports = function(){
       }
     }
   }
+  */
 
   function provideSource(creep){
     let openSourceId = false;
@@ -85,6 +110,8 @@ module.exports = function(){
   }
 
   return({
+    addToQueue : addToQueue,
+    addGoal : addGoal,
     init : init,
   })
 }();

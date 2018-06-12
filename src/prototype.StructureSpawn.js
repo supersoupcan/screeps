@@ -3,32 +3,22 @@
 const role = require('role');
 
 module.exports = function(){
-
-  let queue = [];
-
-  function addToQueue(roleName){
-    this.memory.queue.push(roleName);
-  }
-
-  function construct(){
+  function construct(isRoad){
     const roleName = this.memory.queue.shift();
 
     this.createCreep(
-      role[roleName].build(),
+      role[roleName].build(this.room.energyAvailable, isRoad),
       _.uniqueId(roleName + '_'),
       {
         memory : {
           role : roleName,
-          origin : this.room,
         }
       }
     )
   }
 
   return({
-    addToQueue : addToQueue,
     construct : construct,
-    queue : queue,
   });
 }();
 

@@ -2,9 +2,10 @@ const utils = require('utils');
 
 module.exports = function(){
   function init(){
+    console.log('Initiating source '+ this.id);
     this.room.memory.source[this.id] = {
       isSafe : this.isSafe(),
-      spots : this.avaliableSpots(),  
+      spots : this.availableSpots(),  
     }
   }
 
@@ -25,7 +26,7 @@ module.exports = function(){
       })
     })
     let capacity = 0;
-    _.forEach(data, function(result){
+    _.forEach(capacityData, function(result){
       if(result){
         capacity++;
       }
@@ -39,7 +40,7 @@ module.exports = function(){
     //Search for dangerous things... I'm not sure what's dangerous now,
     //so we will need to update this
     const safeRange = 5;
-    let safeData = util.lookAround(this, safeRange, function(tile){
+    let safeData = utils.lookAround(this, safeRange, function(tile){
       return _.every(tile, function(object){
         switch(object.type){
           case 'structure' : {
@@ -57,5 +58,6 @@ module.exports = function(){
   return{
     init : init,
     isSafe : isSafe,
+    availableSpots : availableSpots
   }
 }();
