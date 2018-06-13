@@ -31,7 +31,7 @@ module.exports = {
     Goal.call(this, 'upgradeController', new job.Upgrader(), (room) => 4);
   },
   BuildSite : function(structureType, priority){
-    Goal.call(this, 'buildSite' + structureType, new job.Builder(), priority);
+    Goal.call(this, 'buildSite' + structureType, new job.Builder(structureType), priority);
     this.structureType = structureType;
   }
 }

@@ -8,17 +8,21 @@ const ExtractorMover = function(name, extract, resource, work, workSite){
 }
 
 ExtractorMover.prototype = function(){
-  function initMemory(creep){
-    return ({
+  function initMemory(creep, goalIndex){
+    creep.memory.assign({}, {
+      role : creep.memory.role,
+      ownedBy : creep.memory.ownedBy,
+    },{
+      goalIndex : goalIndex,
       isExtracting : false,
       extractionSiteId : findExtractionSite(creep),
       workSiteId : findWorkSite(creep)
     })
   }
 
-  function findWorkSite(){
-    let workSites = this.creep.room.find(creep.workSite.find, {
-      filter : creep.workSite.filter
+  function findWorkSite(creep){
+    let workSites = Game.room[creep.memory.ownedBy].find(this.workSite.find, {
+      filter : this.workSite.filter
     })
 
     return workSites[_.random(workSites.length)].id;

@@ -3,13 +3,47 @@ const plan = require('plan');
 module.exports = function(){
   function init(){
     initNextPlan();
+    this.memory.queue = [];
+  }
+
+  function getOwned(){
+    return _.filter(Game.creeps, (creep) => {
+      creep.memeory.ownedBy === this.room.name;
+    })
+  }
+
+  function populateQueue(){
+    let currentlyOwned = {
+      worker : 0,
+    };
+    getOwned().forEach((creep) => {
+      currentlyOwned[creep.role]++;
+    })
+
+    this.memory.queue.forEach((roleRequest) => {
+      currentlyOwned[roleRequest]++;
+    })
+
+    plan[this.controller.level].creeps.forEach((creep) => {
+      const difference = creep.amount - currentlyOwned[creep.type];
+      if(difference > 0){
+        _.times(difference, this.memory.queue.push(creep.type));
+      }else if(difference < 0){
+        //TODO: commit decimation (evil laugh)
+      }
+    })
   }
 
   function initNextPlan(){
     const nextPlan = plan[this.controller.level];
     this.memory.goal = nextPlan.goals.map((goal) => {
       return goal.init();
+    });
+    getOwned().forEach((creep) => {
+      checkForNewGoal(creep);
     })
+
+    populateQueue();
   }
 
   function checkForNewGoal(creep){
