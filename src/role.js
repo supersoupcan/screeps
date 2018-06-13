@@ -33,15 +33,6 @@ Body.prototype = {
   }
 };
 
-//Role: an object which describes the way a creep of a particular 
-//  body compisition should be treated or exchanged
-//  creeps are spawned as specific body types, 
-//  and given jobs dynamically as need arrive
-
-//argv[0] name = STRING (a ref to the role object exported from this module)
-//argv[1] bodyRecipe = ARRAY ( explained above)
-//argv[2] jobs = ARRAY (list which references the jobs this role may preform)
-
 function Role(name, bodyRecipe, jobs){
   this.name = name;
   this.body = new Body(bodyRecipe);

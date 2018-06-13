@@ -1,117 +1,62 @@
-const role = require('role');
-const job = require('job');
-const goal = require('goal');
 const plan = require('plan');
 
 module.exports = function(){
   function init(){
-    this.memory.queue = [];
-    this.memory.goal = {};
-    this.memory.source = {};
+    initNextPlan();
+  }
 
-    _.forEach(this.find(FIND_SOURCES), function(source){
-      source.init();
+  function initNextPlan(){
+    const nextPlan = plan[this.controller.level];
+    this.memory.goal = nextPlan.goals.map((goal) => {
+      return goal.init();
     })
   }
 
-  function addToQueue(rolename){
-    this.memory.queue.push(rolename)
-  }
+  function checkForNewGoal(creep){
+    const goals = plan[this.controller.level].goals;
 
-  function initGoals(){
-    
-  }
-
-  function checkForNewJob(){
-    let currentGoals = plan[this.controller.level].goals;
-
+    let currentGoalIndex = null;
     let goalToBeat = {
-      goalName = null,
-      piority = -1
+      index : null,
+      priority : -1
     }
 
-    let currentGoalName = null;
-
-    _.forEach(currentGoals, function(goal, index){
-
-    })
-
-  }
-
-
-
-  /*
-  function checkForNewJob(creep){
-    let goalToBeat = {
-      goalId : null,
-      priority : -1,
-    }
-
-    let currentGoalId = null;
-
-    function higherPriority(goalDataToCheck, goalId){
-      const priority = goalDataToCheck.priority(this);
+    function higherPriority(goal, index){
+      const priority = goal.priority(this);
       if(priority > goalToBeat.priority){
         goalToBeat = {
-          goalId : goalId,
+          index : index,
           priority : priority
         }
       }
     }
 
-    _.forEach(this.memory.goal, function(goalMemory, goalId){
-      //If goal is currentGoal
-      const goalData = goal[goalMemory.name];
-
-      if(goalData.job.role === creep.role){
-        if(_.includes(goalMemory.assigned, creep.name)){
-          currentGoalId = goalId;
-          higherPriority(goalData, goalId);
-        }else if(goalMemory.assigned.length < goalData.maximum){
-          higherPriority(goalData, goalId);
+    goals.forEach((goal, index) => {
+      if(goal.job.role === creep.role){
+        if(_.includes(this.memory.goal[index].assigned, creep.name)){
+          currentGoalIndex = index;
+          higherPriority(goal, index);
+        }else if(this.memory.goal[index].assigned.length < goal.maximum){
+          higherPriority(goal, index);
+        }
+      }
+      if(goalToBeat.index !== currentGoalIndex){
+        if(Number.isInteger(currentGoalIndex)){
+          _.remove(this.memory.goal[currentGoalIndex].assigned, function(creepName){
+            return creepName === creep.name;
+          })
+        }
+        if(Number.isInteger(jobToBeat.index)){
+          this.memory.goal[jobToBeat.index].assigned.push(creep.name);
+          goals[jobToBeat.index].job.init(creep);
         }
       }
     })
-
-    if(goalToBeat.goalId !== currentGoalId){
-      if(currentGoalId){
-        _.remove(this.memory.goal[currentGoalId].assigned, function(creepName){
-          return creepName === creep.name;
-        })
-      }
-      if(jobToBeat.goalId){
-        const nextGoalMemory = this.memory.goal[jobToBeat.goalId];
-        const nextGoalData = goal[nextGoalMemory.name];
-
-        nextGoalMemory.assigned.push(creep.name);
-        nextGoalData.job.init(creep, nextGoalMemory.override);
-      }
-    }
-  }
-  */
-
-  function provideSource(creep){
-    let openSourceId = false;
-    _.forEach(this.memory.sources, function(source, sourceId){
-      if(source.isSafe){
-        _.forEach(source.spots, function(spot){
-          if(!spot.assigned){
-            spot = {
-              assigned : true,
-              name : creep.name,
-            };
-            openSourceId = sourceId;
-            return false;
-          }
-        })
-      }
-      return openSourceId;
-    });
   }
 
-  return({
-    addToQueue : addToQueue,
-    addGoal : addGoal,
+  return {
     init : init,
-  })
+    checkForNewGoal : checkForNewGoal,
+  }
+
 }();

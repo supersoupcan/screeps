@@ -1,29 +1,33 @@
 const goal = require('goal');
+const role = require('role');
 
 module.exports = [
   {
-    creeps : {},
+    creeps : [],
+    goals : [],
   },
   {
-    creeps : {
-      worker : 4
-    },
+    creeps : [{
+      type : role.worker,
+      amount : 4,
+    }],
     goals : [
-      goal.maintainEnergy,
-      goal.maintainController,
-      goal.upgradeController,
+      new goal.MaintainEnergy(),
+      new goal.MaintainController(),
+      new goal.UpgradeController(),
     ],
   },
   {
-    creeps : {
-      worker : 4
-    },
+    creeps : [{
+      type : role.worker,
+      amount : 4,
+    }],
     goals : [
-      goal.maintainEnergy,
-      goal.maintainController,
-      new goal.BuildConstructionSites(STRUCTURE_EXTENSIONS, 5),
-      new goal.BuildConstructionSites(STRUCTURE_ROAD, 4),
-      goal.upgradeController,
+      new goal.MaintainEnergy(),
+      new goal.MaintainController(),
+      new goal.UpgradeController(),
+      new goal.BuildSite(STRUCTURE_EXTENSION, _.constant(4)),
+      new goal.BuildSite(STRUCTURE_ROADS, _.constant(4))
     ]
   }
 ]
