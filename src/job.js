@@ -8,15 +8,15 @@ const ExtractorMover = function(name, extract, resource, work, workSite){
 }
 
 ExtractorMover.prototype = function(){
-  function initMemory(creep, goalIndex){
+  function init(creep, goalIndex){
     creep.memory.assign({}, {
       role : creep.memory.role,
       ownedBy : creep.memory.ownedBy,
     },{
       goalIndex : goalIndex,
       isExtracting : false,
-      extractionSiteId : findExtractionSite(creep),
-      workSiteId : findWorkSite(creep)
+      extractionSiteId : findExtractionSite.call(this, creep),
+      workSiteId : findWorkSite.call(this, creep)
     })
   }
 
@@ -68,53 +68,64 @@ ExtractorMover.prototype = function(){
   }
 
   return {
-    initMemory : initMemory,
+    init : init,
     run : run
   }
-}
+}();
 
-module.exports = {
-  Harvester : function(){
-    ExtractorMover.call(
-      this, 'harvester', 
-      Creep.harvest, RESOURCE_ENERGY,
-      Creep.transfer,
-      {
-        find : FIND_MY_STRUCTURES,
-        filter : function(structure){
-          if(structure.structureType === STRUCTURE_EXTENSION || structureType === STRUCTURE_SPAWN){
-            return (structure.energy < structure.energyCapacity);
-          }else{
-            return false;
-          }
+let Harvester = function(){
+  ExtractorMover.call(
+    this, 'harvester', 
+    Creep.harvest, RESOURCE_ENERGY,
+    Creep.transfer,
+    {
+      find : FIND_MY_STRUCTURES,
+      filter : function(structure){
+        if(structure.structureType === STRUCTURE_EXTENSION || structureType === STRUCTURE_SPAWN){
+          return (structure.energy < structure.energyCapacity);
+        }else{
+          return false;
         }
       }
-    )
-  },
-  Upgrader : function(){
-    ExtractorMover.call(
-      'upgrader',
-      Creep.harvest,
-      RESOURCE_ENERGY,
-      Creep.upgradeController,
-      {
-        find : FIND_MY_STRUCTURES,
-        filter : function(structure){
-          return structure.structureType === STRUCTURE_CONTROLLER
-      }
     }
-  )},
-  Builder : function(structureType){
-    ExtractorMover.call(
-      'builder_' + structureType,
-      Creep.harvest,
-      RESOURCE_ENERGY,
-      Creep.build,
-      {
-        find : FIND_MY_CONSTRUCTION_SITES,
-        filter : (site) => site.structureType === structureType
-      }
-    )
-  }
+  )
+}
 
+Harvester.prototype = ExtractorMover.prototype;
+
+let Upgrader = function(){
+  ExtractorMover.call(
+    this, 'upgrader',
+    Creep.harvest,
+    RESOURCE_ENERGY,
+    Creep.upgradeController,
+    {
+      find : FIND_MY_STRUCTURES,
+      filter : function(structure){
+        return structure.structureType === STRUCTURE_CONTROLLER
+    }
+  }
+)}
+
+Upgrader.prototype = ExtractorMover.prototype;
+
+let Builder = function(structureType){
+  ExtractorMover.call(
+    this, 'builder_' + structureType,
+    Creep.harvest,
+    RESOURCE_ENERGY,
+    Creep.build,
+    {
+      find : FIND_MY_CONSTRUCTION_SITES,
+      filter : (site) => site.structureType === structureType
+    }
+  )
+}
+
+Builder.prototype = ExtractorMover.prototype;
+
+module.exports = {
+  Harvester : Harvester,
+  Upgrader : Upgrader,
+  Builder : Builder,
 }

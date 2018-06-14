@@ -2,8 +2,8 @@ const plan = require('plan');
 
 module.exports = function(){
   function init(){
-    initNextPlan();
     this.memory.queue = [];
+    initNextPlan.call(this);
   }
 
   function getOwned(){
@@ -16,18 +16,21 @@ module.exports = function(){
     let currentlyOwned = {
       worker : 0,
     };
-    getOwned().forEach((creep) => {
+
+    _.forEach(getOwned.call(this), (creep) => {
       currentlyOwned[creep.role]++;
     })
 
-    this.memory.queue.forEach((roleRequest) => {
+    _.forEach(this.memory.queue, (roleRequest) => {
       currentlyOwned[roleRequest]++;
     })
 
-    plan[this.controller.level].creeps.forEach((creep) => {
-      const difference = creep.amount - currentlyOwned[creep.type];
+    _.forEach(plan[this.controller.level].creeps, (creep) => {
+      const difference = creep.amount - currentlyOwned[creep.role.name];
+      
       if(difference > 0){
-        _.times(difference, this.memory.queue.push(creep.type));
+        console.log(difference, creep.role.name);
+        _.times(difference, () => {this.memory.queue.push(creep.role.name)});
       }else if(difference < 0){
         //TODO: commit decimation (evil laugh)
       }
@@ -37,13 +40,13 @@ module.exports = function(){
   function initNextPlan(){
     const nextPlan = plan[this.controller.level];
     this.memory.goal = nextPlan.goals.map((goal) => {
-      return goal.init();
+      return goal.initMemory();
     });
-    getOwned().forEach((creep) => {
-      checkForNewGoal(creep);
+    getOwned.call(this).forEach((creep) => {
+      checkForNewGoal.call(this, creep);
     })
 
-    populateQueue();
+    populateQueue.call(this);
   }
 
   function checkForNewGoal(creep){
@@ -57,6 +60,7 @@ module.exports = function(){
 
     function higherPriority(goal, index){
       const priority = goal.priority(this);
+      console.log('proirity', priority);
       if(priority > goalToBeat.priority){
         goalToBeat = {
           index : index,
@@ -66,7 +70,7 @@ module.exports = function(){
     }
 
     goals.forEach((goal, index) => {
-      if(goal.job.role === creep.role){
+      if(goal.job.role === creep.memory.role){
         if(_.includes(this.memory.goal[index].assigned, creep.name)){
           currentGoalIndex = index;
           higherPriority(goal, index);
@@ -74,15 +78,16 @@ module.exports = function(){
           higherPriority(goal, index);
         }
       }
+
       if(goalToBeat.index !== currentGoalIndex){
         if(Number.isInteger(currentGoalIndex)){
           _.remove(this.memory.goal[currentGoalIndex].assigned, function(creepName){
             return creepName === creep.name;
           })
         }
-        if(Number.isInteger(jobToBeat.index)){
-          this.memory.goal[jobToBeat.index].assigned.push(creep.name);
-          goals[jobToBeat.index].job.init(creep);
+        if(Number.isInteger(goalToBeat.index)){
+          this.memory.goal[goalToBeat.index].assigned.push(creep.name);
+          goals[goalToBeat.index].job.init(creep, goalToBeat.index);
         }
       }
     })

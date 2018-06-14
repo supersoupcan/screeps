@@ -5,7 +5,7 @@
   "main": "src/main.js",
   "scripts": {
     "test": "test",
-    "grunt" : "grunt screeps"
+    "grunt": "grunt screeps"
   },
   "repository": {
     "type": "git",

@@ -1,12 +1,12 @@
-const plan = require(plan);
+const plan = require('plan');
 
 module.exports = function(){
   function manageRooms(){
     _.forEach(Game.rooms, (room) => {
-      if(_.isEmpty(roomMemory)){
+      if(_.isEmpty(room.memory)){
         room.init();
       }
-      if(room.memory.queue > 0 && room.energyCapacity === room.energyCapacityAvailable){
+      if(room.memory.queue.length > 0 && room.energyAvailable === room.energyCapacityAvailable){
         _.forEach(room.find(FIND_MY_SPAWNS), (spawn) => {
           if(!spawn.spawning){
             spawn.construct()
@@ -19,7 +19,7 @@ module.exports = function(){
   function manageCreeps(){
     _.forEach(Game.creeps, (creep) => {
       const creepRoom = Game.rooms[creep.memory.ownedBy];
-      if(!creep.memory.goalIndex){
+      if(!creep.hasOwnProperty('goalIndex')){
         creepRoom.checkForNewGoal(creep);
       }
       plan[creepRoom.controller.level].goals[creep.memory.goalIndex].job.run(creep);

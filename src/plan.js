@@ -8,8 +8,8 @@ module.exports = [
   },
   {
     creeps : [{
-      type : role.worker,
-      amount : 4,
+      role : role.worker,
+      amount : 1,
     }],
     goals : [
       new goal.MaintainEnergy(),
@@ -19,7 +19,7 @@ module.exports = [
   },
   {
     creeps : [{
-      type : role.worker,
+      role : role.worker,
       amount : 4,
     }],
     goals : [
@@ -27,7 +27,7 @@ module.exports = [
       new goal.MaintainController(),
       new goal.UpgradeController(),
       new goal.BuildSite(STRUCTURE_EXTENSION, _.constant(4)),
-      new goal.BuildSite(STRUCTURE_ROADS, _.constant(4))
+      new goal.BuildSite(STRUCTURE_ROAD, _.constant(4))
     ]
   }
 ]
