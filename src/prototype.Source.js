@@ -2,7 +2,6 @@ const utils = require('utils');
 
 module.exports = function(){
   function init(){
-    console.log('Initiating source '+ this.id);
     this.room.memory.source[this.id] = {
       isSafe : this.isSafe(),
       spots : this.availableSpots(),  
@@ -31,9 +30,7 @@ module.exports = function(){
         capacity++;
       }
     })
-    return _.times(capacity, _.constant({
-      assigned : false,
-    }))
+    return _.times(capacity, _.constant(null))
   }
 
   function isSafe(){

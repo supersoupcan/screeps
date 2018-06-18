@@ -1,12 +1,13 @@
-function Body(bodyRecipe){
+function Role(name, bodyRecipe){
+  this.name = name;
   this.bodyRecipe = bodyRecipe;
 }
 
-Body.prototype = function(){
-  function build(power, isRoad){
+Role.prototype = function(){
+  function createBuild(maxEnergy, isRoad){
     const movePartPerParts = isRoad ? 4 : 2;
     let body = [];
-    let bodyEnergyCost = 0;
+    let energyCost = 0;
     let i = 0;
     let p = 0;
     let nextPart = null;
@@ -14,53 +15,30 @@ Body.prototype = function(){
     do{
       if(nextPart){
         body.push(nextPart);
-        bodyEnergyCost += BODYPART_COST[nextPart];
+        energyCost += BODYPART_COST[nextPart];
       }
 
       if(i % movePartPerParts === 0){
         nextPart = MOVE;
       }else{
         nextPart = this.bodyRecipe[p % this.bodyRecipe.length];
-        console.log(p);
         p++;
       }
       i++;
-    }while(bodyEnergyCost + BODYPART_COST[nextPart] < power);
+    }while(energyCost + BODYPART_COST[nextPart] < maxEnergy);
 
-    return body;
+    return ({
+      role : this.name,
+      body : body,
+      energyCost : energyCost, 
+    })
   }
 
   return ({
-    build : build
+    createBuild : createBuild,
   })
 }();
-
-function Role(name, bodyRecipe, jobs){
-  this.name = name;
-  this.body = new Body(bodyRecipe);
-}
 
 const worker = new Role('worker', [CARRY, WORK]);
 
 module.exports.worker = worker;
-
-/*
-    while(bodyEnergyCost + BODYPART_COST[nextPart] < power){
-      body.push(nextPart);
-      bodyEnergyCost += BODYPART_COST[nextPart];
-
-
-    }
-
-    return body;
-
-
-if(i % movePartPerParts === isRoad){
-  nextPart = MOVE;
-}else{
-  nextPart = this.bodyRecipe[p % this.bodyRecipe.length]; 
-  p++;
-}
-i++;
-
-*/

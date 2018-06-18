@@ -9,7 +9,7 @@ module.exports = [
   {
     creeps : [{
       role : role.worker,
-      amount : 1,
+      amount : 4,
     }],
     goals : [
       new goal.MaintainEnergy(),

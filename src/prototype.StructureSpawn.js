@@ -1,24 +1,21 @@
 'use strict'
 
-const role = require('role');
-
 
 module.exports = function(){
-  function construct(){
-    const roleName = this.room.memory.queue.shift();
-    let err = this.spawnCreep(
-      role[roleName].body.build(this.room.energyAvailable, false),
-      _.uniqueId(roleName + '_'),
+  function construct(nextBuild){
+    let msg = this.spawnCreep(
+      nextBuild.body,
+      nextBuild.role + '_' + Game.time,
       {
         memory : {
-          role : roleName,
+          role : nextBuild.role,
           ownedBy : this.room.name
         }
       }
     )
-
-    console.log(err);
-
+    return(
+      msg
+    )
   }
 
   return({

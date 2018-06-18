@@ -2,13 +2,20 @@ const plan = require('plan');
 
 module.exports = function(){
   function init(){
+    this.memory.source = {};
+    _.forEach(this.find(FIND_SOURCES), function(source){
+      source.init();
+    })
+
     this.memory.queue = [];
+    this.memory.nextBuild = null;
+
     initNextPlan.call(this);
   }
 
   function getOwned(){
     return _.filter(Game.creeps, (creep) => {
-      creep.memeory.ownedBy === this.room.name;
+      return creep.memory.ownedBy === this.name;
     })
   }
 
@@ -18,18 +25,28 @@ module.exports = function(){
     };
 
     _.forEach(getOwned.call(this), (creep) => {
-      currentlyOwned[creep.role]++;
+      currentlyOwned[creep.memory.role]++;
     })
 
-    _.forEach(this.memory.queue, (roleRequest) => {
-      currentlyOwned[roleRequest]++;
+    console.log(currentlyOwned.worker);
+
+    _.forEach(this.memory.queue, (requestedRole) => {
+      currentlyOwned[requestedRole]++;
     })
+
+    console.log(currentlyOwned.worker);
+
+    if(this.memory.nextBuild){
+      currentlyOwned[this.memory.nextBuild.role]++;
+    }
+
+    console.log(currentlyOwned.worker);
 
     _.forEach(plan[this.controller.level].creeps, (creep) => {
+      console.log('populate check ' + creep.role.name + ' ' + currentlyOwned[creep.role.name]);
       const difference = creep.amount - currentlyOwned[creep.role.name];
-      
+      console.log('spawning ' + difference)
       if(difference > 0){
-        console.log(difference, creep.role.name);
         _.times(difference, () => {this.memory.queue.push(creep.role.name)});
       }else if(difference < 0){
         //TODO: commit decimation (evil laugh)
@@ -38,11 +55,13 @@ module.exports = function(){
   }
 
   function initNextPlan(){
+    console.log('room ' + this.name + ' changed level to ' + this.controller.level);
     const nextPlan = plan[this.controller.level];
+    this.memory.level = this.controller.level;
     this.memory.goal = nextPlan.goals.map((goal) => {
       return goal.initMemory();
     });
-    getOwned.call(this).forEach((creep) => {
+    _.forEach(getOwned.call(this), (creep) => {
       checkForNewGoal.call(this, creep);
     })
 
@@ -50,6 +69,8 @@ module.exports = function(){
   }
 
   function checkForNewGoal(creep){
+    console.log('assigning goal to ' + creep.name);
+
     const goals = plan[this.controller.level].goals;
 
     let currentGoalIndex = null;
@@ -58,9 +79,15 @@ module.exports = function(){
       priority : -1
     }
 
-    function higherPriority(goal, index){
-      const priority = goal.priority(this);
-      console.log('proirity', priority);
+    function higherPriority(goal, index, alreadyHasThisGoal){
+      const priority = goal.getPriority(
+        this, 
+        this.memory.goal[index],
+        alreadyHasThisGoal
+      );
+
+      console.log(goal.name + " priority: " + priority);
+
       if(priority > goalToBeat.priority){
         goalToBeat = {
           index : index,
@@ -72,30 +99,53 @@ module.exports = function(){
     goals.forEach((goal, index) => {
       if(goal.job.role === creep.memory.role){
         if(_.includes(this.memory.goal[index].assigned, creep.name)){
+          //IF CREEP ALREADY HAS JOB
           currentGoalIndex = index;
-          higherPriority(goal, index);
+          higherPriority.call(this, goal, index, true);
         }else if(this.memory.goal[index].assigned.length < goal.maximum){
-          higherPriority(goal, index);
+          //CHECK JOBS MAXIMUM LIMIT HAS NOT BEEN TAKEN
+          //MIGHT BE ABLE TO GET RID OF THIS WITH THE PRIORITY FUNCTIONS
+          higherPriority.call(this, goal, index, false);
         }
       }
+    });
 
-      if(goalToBeat.index !== currentGoalIndex){
-        if(Number.isInteger(currentGoalIndex)){
-          _.remove(this.memory.goal[currentGoalIndex].assigned, function(creepName){
-            return creepName === creep.name;
-          })
-        }
-        if(Number.isInteger(goalToBeat.index)){
-          this.memory.goal[goalToBeat.index].assigned.push(creep.name);
-          goals[goalToBeat.index].job.init(creep, goalToBeat.index);
-        }
+    if(goalToBeat.index !== currentGoalIndex){
+      if(Number.isInteger(currentGoalIndex)){
+        _.remove(this.memory.goal[currentGoalIndex].assigned, function(creepName){
+          return creepName === creep.name;
+        })
+      }
+      if(Number.isInteger(goalToBeat.index)){
+        console.log(creep.name + ' assigned to ' + goals[goalToBeat.index].name + " (" + goalToBeat.priority + ")" );
+        this.memory.goal[goalToBeat.index].assigned.push(creep.name);
+        goals[goalToBeat.index].job.init(creep, goalToBeat.index);
+      }
+    }
+  }
+
+  function provideSource(creep){
+    let index = null;
+    let openSourceKey = _.findKey(this.memory.source, (source) => {
+      let openSpotIndex = _.findIndex(source.spots, (spot) => {
+        return !Boolean(spot)
+      });
+      if(Number.isInteger(openSpotIndex)){
+        index = openSpotIndex;
+        return true;
+      }else{
+        return false;
       }
     })
-  }
 
+    this.memory.source[openSourceKey].spots[index] = creep.name;
+    return openSourceKey;
+  }
+  
   return {
     init : init,
+    initNextPlan : initNextPlan,
     checkForNewGoal : checkForNewGoal,
+    provideSource : provideSource,
   }
-
 }();
