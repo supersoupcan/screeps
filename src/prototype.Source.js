@@ -2,14 +2,18 @@ const utils = require('utils');
 
 module.exports = function(){
   function init(){
-    this.room.memory.source[this.id] = {
-      isSafe : this.isSafe(),
-      spots : this.availableSpots(),  
-    }
+    console.log('activating source');
+    this.room.memory.sources.push({
+      id : this.id,
+      isSafe: this.isSafe(),
+      spaces: this.availableSpace(this),
+      containerId: null,
+      staticMinerId: null,
+    })
   }
 
-  function availableSpots(){
-    const capacityData = utils.lookAround(this, 1, function(tile){
+  function availableSpace(target){
+    const capacityData = utils.lookAround(target, 1, function(tile){
       return _.every(tile, function(object){
         switch(object.type){
           case 'terrain' : {
@@ -55,6 +59,6 @@ module.exports = function(){
   return{
     init : init,
     isSafe : isSafe,
-    availableSpots : availableSpots
+    availableSpace : availableSpace,
   }
 }();

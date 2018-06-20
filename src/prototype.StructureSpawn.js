@@ -3,7 +3,7 @@
 
 module.exports = function(){
   function construct(nextBuild){
-    let msg = this.spawnCreep(
+    return this.spawnCreep(
       nextBuild.body,
       nextBuild.role + '_' + Game.time,
       {
@@ -12,9 +12,6 @@ module.exports = function(){
           ownedBy : this.room.name
         }
       }
-    )
-    return(
-      msg
     )
   }
 

@@ -1,11 +1,12 @@
-function Role(name, bodyRecipe){
+function Role(name, bodyRecipe, moveRatio){
   this.name = name;
   this.bodyRecipe = bodyRecipe;
+  this.moveRatio = moveRatio;
 }
 
 Role.prototype = function(){
   function createBuild(maxEnergy, isRoad){
-    const movePartPerParts = isRoad ? 4 : 2;
+    const movePartPerParts = isRoad ? this.moveRatio*2 : this.moveRatio;
     let body = [];
     let energyCost = 0;
     let i = 0;
@@ -39,6 +40,20 @@ Role.prototype = function(){
   })
 }();
 
-const worker = new Role('worker', [CARRY, WORK]);
+const worker = new Role('worker', [CARRY, WORK], 2);
+const miner = new Role('miner', [WORK], 4);
+const hauler = new Role('builder', [WORK, CARRY, CARRY, CARRY, CARRY, CARRY], 2)
 
-module.exports.worker = worker;
+module.exports = {
+  worker : worker,
+  miner : miner,
+  hauler : hauler,
+}
+
+/*
+// ROLES
+// ~~~~~~
+// worker: upgrades controller, maintains controller, repair, (everything at low RLC)
+// miner: mines target standing ontop of container, repairs container when target is empty, 
+// hauler: distributes resources, builds structures,
+*/

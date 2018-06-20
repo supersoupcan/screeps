@@ -1,10 +1,10 @@
 const ExtractorMover = function(name, extract, resource, work, workSite){
   this.name = name;
-  this.role = 'worker',
   this.extract = extract;
   this.resource = resource;
   this.work = work;
   this.workSite = workSite;
+  this.role = 'worker';
 }
 
 ExtractorMover.prototype = function(){
@@ -15,7 +15,7 @@ ExtractorMover.prototype = function(){
     },{
       goalIndex : goalIndex,
       isExtracting : true,
-      extractionSiteId : findExtractionSite.call(this, creep),
+      extractionSiteId : findExtractionSiteId.call(this, creep),
       workSiteId : findWorkSite.call(this, creep)
     })
   }
@@ -35,7 +35,11 @@ ExtractorMover.prototype = function(){
     }
   }
 
-  function findExtractionSite(creep){
+  function findExtractionSiteId(creep){
+    if(creep.memory.extractonSiteId){
+      let site = Game.getObjectById(creep.memory.extractonSite);
+    }
+
     switch(this.resource){
       case RESOURCE_ENERGY : {
         return creep.room.provideSource(creep);
@@ -86,9 +90,9 @@ ExtractorMover.prototype = function(){
   }
 }();
 
-let Harvester = function(){
+let HarvesterCarrier = function(){
   ExtractorMover.call(
-    this, 'harvester', 
+    this, 'harvesterCarrier',
     Creep.prototype.harvest, 
     RESOURCE_ENERGY,
     Creep.prototype.transfer,
@@ -105,11 +109,11 @@ let Harvester = function(){
   )
 }
 
-Harvester.prototype = ExtractorMover.prototype;
+HarvesterCarrier.prototype = ExtractorMover.prototype;
 
-let Upgrader = function(){
+let HarvesterUpgrader = function(){
   ExtractorMover.call(
-    this, 'upgrader',
+    this, 'harvesterUpgrader',
     Creep.prototype.harvest,
     RESOURCE_ENERGY,
     Creep.prototype.upgradeController,
@@ -121,11 +125,11 @@ let Upgrader = function(){
   }
 )}
 
-Upgrader.prototype = ExtractorMover.prototype;
+HarvesterUpgrader.prototype = ExtractorMover.prototype;
 
-let Builder = function(structureType){
+let HarvesterBuilder = function(structureType){
   ExtractorMover.call(
-    this, 'builder_' + structureType,
+    this, 'harvesterBuilder_' + structureType,
     Creep.prototype.harvest,
     RESOURCE_ENERGY,
     Creep.prototype.build,
@@ -136,10 +140,10 @@ let Builder = function(structureType){
   )
 }
 
-Builder.prototype = ExtractorMover.prototype;
+HarvesterBuilder.prototype = ExtractorMover.prototype;
 
 module.exports = {
-  Harvester : Harvester,
-  Upgrader : Upgrader,
-  Builder : Builder,
+  HarvesterCarrier: HarvesterCarrier,
+  HarvesterUpgrader : HarvesterUpgrader,
+  HarvesterBuilder : HarvesterBuilder,
 }

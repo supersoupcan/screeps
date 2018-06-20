@@ -57,7 +57,7 @@ module.exports = function(){
           if(!creep.memory.hasOwnProperty('goalIndex')){
             creepRoom.checkForNewGoal(creep);
           }
-          plan[creepRoom.controller.level].goals[creep.memory.goalIndex].job.run(creep);
+          creepRoom.controller.getPlan().goals[creep.memory.goalIndex].job.run(creep);
         }
       }
     })

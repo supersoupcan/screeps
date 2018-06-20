@@ -1,8 +1,7 @@
-const job = require('job');
-
-let Goal = function(name, job, operationalizePriority, config){
+let Goal = function(name, job, eligibleTo, operationalizePriority, config){
   const cf = config || {};
   this.name = name;
+  this.eligibleTo = eligibleTo;
   this.job = job;
   this.operationalizePriority = operationalizePriority;
   this.maximum = cf.maximum || 99;
@@ -39,11 +38,12 @@ Goal.prototype = function(){
 }
 }();
 
-let MaintainEnergy = function(){
+let MaintainEnergy = function(Job, eligibleTo){
   Goal.call(
-    this, 
+    this,
     'maintainEnergy', 
-    new job.Harvester(), 
+    new Job(), 
+    eligibleTo,
     function(room, goalMemory, alreadyHasThisGoal){
       return {
         demand : (1 - room.energyAvailable / room.energyCapacityAvailable),
@@ -57,10 +57,11 @@ let MaintainEnergy = function(){
 
 MaintainEnergy.prototype = Object.create(Goal.prototype);
 
-let MaintainController = function(){
+let MaintainController = function(Job, eligibleTo){
   Goal.call(this, 
     'maintainController', 
-    new job.Upgrader(), 
+    new Job(),
+    eligibleTo, 
     function(room, goalMemory, alreadyHasThisGoal){
       return {
         demand : (room.controller.ticksToDowngrade <= 600) ? 1 : 0,
@@ -72,10 +73,14 @@ let MaintainController = function(){
 
 MaintainController.prototype = Object.create(Goal.prototype);
 
-let UpgradeController = function(){
+let UpgradeController = function(Job, eligibleTo){
   Goal.call(this, 
     'upgradeController', 
-    new job.Upgrader(), 
+    new Job(
+
+      
+    ),
+    eligibleTo,
     function(room, goalMemory, alreadyHasThisGoal){
       return {
         demand : 0.25,
@@ -86,11 +91,12 @@ let UpgradeController = function(){
 }
 UpgradeController.prototype = Object.create(Goal.prototype);
 
-let BuildSite = function(structureType){
+let BuildSite = function(Job, eligibleTo, structureType){
   Goal.call(
     this, 
     'buildSite' + structureType, 
-    new job.Builder(structureType),
+    new Job(structureType),
+    eligibleTo,
     function(room, goalMemory, alreadyHasThisGoal){
       return {
         demand : 0.5
@@ -99,6 +105,7 @@ let BuildSite = function(structureType){
   );
   this.structureType = structureType;
 }
+
 BuildSite.prototype = Object.create(Goal.prototype);
 
 module.exports = {

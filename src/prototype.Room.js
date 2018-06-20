@@ -1,8 +1,8 @@
-const plan = require('plan');
+const role = require('role');
 
 module.exports = function(){
   function init(){
-    this.memory.source = {};
+    this.memory.sources = [];
     _.forEach(this.find(FIND_SOURCES), function(source){
       source.init();
     })
@@ -20,30 +20,27 @@ module.exports = function(){
   }
 
   function populateQueue(){
-    let currentlyOwned = {
-      worker : 0,
-    };
+    let currentlyOwned = {};
+
+    _.forEach(role, (data, roleName) => {
+      currentlyOwned[roleName] = 0;
+    })
 
     _.forEach(getOwned.call(this), (creep) => {
       currentlyOwned[creep.memory.role]++;
     })
 
-    console.log(currentlyOwned.worker);
-
     _.forEach(this.memory.queue, (requestedRole) => {
       currentlyOwned[requestedRole]++;
     })
-
-    console.log(currentlyOwned.worker);
 
     if(this.memory.nextBuild){
       currentlyOwned[this.memory.nextBuild.role]++;
     }
 
-    console.log(currentlyOwned.worker);
-
-    _.forEach(plan[this.controller.level].creeps, (creep) => {
-      console.log('populate check ' + creep.role.name + ' ' + currentlyOwned[creep.role.name]);
+    _.forEach(this.controller.getPlan().creeps, (creep) => {
+      console.log(JSON.stringify(creep));
+      console.log('population check ' + creep.role.name + ' ' + currentlyOwned[creep.role.name]);
       const difference = creep.amount - currentlyOwned[creep.role.name];
       console.log('spawning ' + difference)
       if(difference > 0){
@@ -56,7 +53,7 @@ module.exports = function(){
 
   function initNextPlan(){
     console.log('room ' + this.name + ' changed level to ' + this.controller.level);
-    const nextPlan = plan[this.controller.level];
+    const nextPlan = this.controller.getPlan();
     this.memory.level = this.controller.level;
     this.memory.goal = nextPlan.goals.map((goal) => {
       return goal.initMemory();
@@ -70,9 +67,7 @@ module.exports = function(){
 
   function checkForNewGoal(creep){
     console.log('assigning goal to ' + creep.name);
-
-    const goals = plan[this.controller.level].goals;
-
+    const goals = this.controller.getPlan().goals;
     let currentGoalIndex = null;
     let goalToBeat = {
       index : null,
@@ -96,7 +91,7 @@ module.exports = function(){
       }
     }
 
-    goals.forEach((goal, index) => {
+    _.forEach(goals, (goal, index) => {
       if(goal.job.role === creep.memory.role){
         if(_.includes(this.memory.goal[index].assigned, creep.name)){
           //IF CREEP ALREADY HAS JOB
@@ -125,21 +120,24 @@ module.exports = function(){
   }
 
   function provideSource(creep){
-    let index = null;
-    let openSourceKey = _.findKey(this.memory.source, (source) => {
-      let openSpotIndex = _.findIndex(source.spots, (spot) => {
-        return !Boolean(spot)
-      });
-      if(Number.isInteger(openSpotIndex)){
-        index = openSpotIndex;
-        return true;
-      }else{
-        return false;
-      }
-    })
+    let safeSources = _.filter(this.memory.sources, { 'isSafe' : true });
+    let spaceIndex = -1;
+    let sourceId = null;
+    while(spaceIndex < 8 && !Boolean(sourceId)){
+      spaceIndex++;
+      _.forEach(safeSources, (sourceMemory, index) => {
+        if(sourceMemory.spaces[spaceIndex] === null){
+          sourceId = sourceMemory.id;
+          return false;
+        }
+      })
+      console.log('round ' + spaceIndex);
+    }
+  
 
-    this.memory.source[openSourceKey].spots[index] = creep.name;
-    return openSourceKey;
+    let sourceIndex = _.findIndex(this.memory.sources, {id : sourceId});
+    this.memory.sources[sourceIndex].spaces[spaceIndex] = creep.name;
+    return sourceId;
   }
   
   return {
