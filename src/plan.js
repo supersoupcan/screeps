@@ -14,17 +14,14 @@ module.exports = [
     }],
     goals : [
       new goal.MaintainEnergy(
-        job.HarvesterCarrier, {
-        worker : 1,
-      }),
+        job.HarvesterCarrier
+      ),
       new goal.MaintainController(
-        job.HarvesterUpgrader, {
-        worker : 1,
-      }),
+        job.HarvesterUpgrader
+      ),
       new goal.UpgradeController(
-        job.HarvesterUpgrader, {
-        worker : 1
-      }),
+        job.HarvesterUpgrader
+      ),
     ],
   },
   {
@@ -42,35 +39,24 @@ module.exports = [
   ],
     goals : [
       new goal.MaintainEnergy(
-        job.HarvesterCarrier, {
-        worker : 1,
-      }),
+        job.HarvesterCarrier,
+      ),
       new goal.MaintainController(
-        job.HarvesterUpgrader, {
-          worker : 1,
-        }
+        job.HarvesterUpgrader,
       ),
       new goal.UpgradeController(
-        job.HarvesterUpgrader, {
-          worker : 1,
-        }
+        job.HarvesterUpgrader
       ),
       new goal.BuildSite(
-        job.HarvesterBuilder,{
-          worker : 1,
-        },
+        job.HarvesterBuilder,
         STRUCTURE_CONTAINER
       ),
       new goal.BuildSite(
-        job.HarvesterBuilder,{
-          worker : 1,
-        },
+        job.HarvesterBuilder,
         STRUCTURE_EXTENSION
       ),
       new goal.BuildSite(
-        job.HarvesterBuilder,{
-          worker : 1,
-        },
+        job.HarvesterBuilder,
         STRUCTURE_ROAD
       )
     ]

@@ -1,21 +1,24 @@
-const ExtractorMover = function(name, extract, resource, work, workSite){
+const extraction = require('extraction');
+
+const ExtractorWorker = function(name, role, extraction, work, workSite){
   this.name = name;
-  this.extract = extract;
-  this.resource = resource;
+  this.role = role;
+  this.extraction = extraction;
   this.work = work;
   this.workSite = workSite;
-  this.role = 'worker';
 }
 
-ExtractorMover.prototype = function(){
+ExtractorWorker.prototype = function(){
   function init(creep, goalIndex){
+    console.log('initializing ' + creep.name)
+    const owner = Game.rooms[creep.memory.ownedBy];
     creep.memory = Object.assign({}, {
       role : creep.memory.role,
       ownedBy : creep.memory.ownedBy,
     },{
       goalIndex : goalIndex,
       isExtracting : true,
-      extractionSiteId : findExtractionSiteId.call(this, creep),
+      extractionSite : owner.provideExtraction(creep, this.extraction),
       workSiteId : findWorkSite.call(this, creep)
     })
   }
@@ -34,34 +37,27 @@ ExtractorMover.prototype = function(){
       Game.rooms[creep.memory.ownedBy].checkForNewGoal(creep);
     }
   }
-
-  function findExtractionSiteId(creep){
-    if(creep.memory.extractonSiteId){
-      let site = Game.getObjectById(creep.memory.extractonSite);
-    }
-
-    switch(this.resource){
-      case RESOURCE_ENERGY : {
-        return creep.room.provideSource(creep);
-      } 
-    }
-  }
   
   function isExtracting(creep){
-    //console.log(creep.carry[this.resource] === creep.carryCapacity);
-    if(creep.memory.isExtracting && creep.carry[this.resource] === creep.carryCapacity){
+    if(creep.memory.isExtracting && creep.carry[this.extraction.resource] === creep.carryCapacity){
       creep.memory.isExtracting = false;
-    }else if(!creep.memory.isExtracting && creep.carry[this.resource] === 0){
+    }else if(!creep.memory.isExtracting && creep.carry[this.extraction.resource] === 0){
       creep.memory.isExtracting = true;
       Game.rooms[creep.memory.ownedBy].checkForNewGoal(creep);
     }
     return creep.memory.isExtracting;
   }
 
+  function dismiss(creep){
+    let owner = Game.rooms[creep.memory.ownedBy];
+    owner.memory[this.extraction.resource].
+  }
+
   function run(creep){
     if(isExtracting.call(this, creep)){
-      const extractionSite = Game.getObjectById(creep.memory.extractionSiteId);
-      switch(this.extract.call(creep, extractionSite)){
+      const extractionSite = Game.getObjectById(creep.memory.extractionSite.id);
+      const method = this.extraction.weightedOrders[creep.memory.extractionSite.index].method;
+      switch(method.call(creep, extractionSite)){
         case ERR_NOT_IN_RANGE : {
           creep.moveTo(extractionSite);
           break;
@@ -69,7 +65,7 @@ ExtractorMover.prototype = function(){
       }
     }else{
       const workSite = Game.getObjectById(creep.memory.workSiteId);
-      const important = this.work.call(creep, workSite, this.resource);
+      const important = this.work.call(creep, workSite, this.extraction.resource);
       //console.log(important, workSite.structureType);
       switch(important){
         case ERR_NOT_IN_RANGE : {
@@ -86,15 +82,15 @@ ExtractorMover.prototype = function(){
 
   return {
     init : init,
-    run : run
+    run : run,
+    dismiss : dismiss
   }
 }();
 
 let HarvesterCarrier = function(){
-  ExtractorMover.call(
-    this, 'harvesterCarrier',
-    Creep.prototype.harvest, 
-    RESOURCE_ENERGY,
+  ExtractorWorker.call(
+    this, 'harvesterCarrier', 'worker',
+    extraction.harvesterWorker,  
     Creep.prototype.transfer,
     {
       find : FIND_MY_STRUCTURES,
@@ -109,13 +105,12 @@ let HarvesterCarrier = function(){
   )
 }
 
-HarvesterCarrier.prototype = ExtractorMover.prototype;
+HarvesterCarrier.prototype = ExtractorWorker.prototype;
 
 let HarvesterUpgrader = function(){
-  ExtractorMover.call(
-    this, 'harvesterUpgrader',
-    Creep.prototype.harvest,
-    RESOURCE_ENERGY,
+  ExtractorWorker.call(
+    this, 'harvesterUpgrader', 'worker',
+    extraction.harvesterWorker,
     Creep.prototype.upgradeController,
     {
       find : FIND_MY_STRUCTURES,
@@ -125,13 +120,12 @@ let HarvesterUpgrader = function(){
   }
 )}
 
-HarvesterUpgrader.prototype = ExtractorMover.prototype;
+HarvesterUpgrader.prototype = ExtractorWorker.prototype;
 
 let HarvesterBuilder = function(structureType){
-  ExtractorMover.call(
-    this, 'harvesterBuilder_' + structureType,
-    Creep.prototype.harvest,
-    RESOURCE_ENERGY,
+  ExtractorWorker.call(
+    this, 'harvesterBuilder_' + structureType, 'worker',
+    extraction.harvesterWorker,
     Creep.prototype.build,
     {
       find : FIND_MY_CONSTRUCTION_SITES,
@@ -140,7 +134,7 @@ let HarvesterBuilder = function(structureType){
   )
 }
 
-HarvesterBuilder.prototype = ExtractorMover.prototype;
+HarvesterBuilder.prototype = ExtractorWorker.prototype;
 
 module.exports = {
   HarvesterCarrier: HarvesterCarrier,

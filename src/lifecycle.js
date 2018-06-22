@@ -48,9 +48,12 @@ module.exports = function(){
       const creep = Game.creeps[creepName];
       const creepRoom = Game.rooms[creepMemory.ownedBy];
       if(!creep){
+        //HANDLE CREEP DEATH
         console.log(creepName + ' has died');
         creepRoom.memory.queue.push(creepMemory.role);
-        _.remove(creepRoom.memory.goal[creepMemory.goalIndex], (assignedTo) => (assignedTo === creepName));
+        if(goalIndex in creepMemory){
+          creepRoom.controller.getPlan().goals[creep.memory.goalIndex].dismiss(creep);
+        }
         delete Memory.creeps[creepName];
       }else{
         if(!creep.spawning){

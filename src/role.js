@@ -40,9 +40,22 @@ Role.prototype = function(){
   })
 }();
 
-const worker = new Role('worker', [CARRY, WORK], 2);
-const miner = new Role('miner', [WORK], 4);
-const hauler = new Role('builder', [WORK, CARRY, CARRY, CARRY, CARRY, CARRY], 2)
+const worker = new Role(
+  'worker', 
+  [CARRY, WORK],
+  2,
+);
+const miner = new Role(
+  'miner', 
+  [WORK], 
+  4
+);
+
+const hauler = new Role(
+  'builder', 
+  [WORK, CARRY, CARRY, CARRY, CARRY, CARRY], 
+  2,
+);
 
 module.exports = {
   worker : worker,

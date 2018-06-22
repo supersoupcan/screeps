@@ -2,13 +2,11 @@ const utils = require('utils');
 
 module.exports = function(){
   function init(){
-    console.log('activating source');
-    this.room.memory.sources.push({
-      id : this.id,
+    this.room.memory[RESOURCE_ENERGY].push({
+      type : 'source',
+      sourceId : this.id,
       isSafe: this.isSafe(),
       spaces: this.availableSpace(this),
-      containerId: null,
-      staticMinerId: null,
     })
   }
 
@@ -35,6 +33,18 @@ module.exports = function(){
       }
     })
     return _.times(capacity, _.constant(null))
+  }
+
+  function develop(){
+    /*  upgrade source so that it has a dedicated miner and container.
+    //
+    //  when finished update memory
+    //  {
+    //    type : "developedSource"
+    //    minerId : null,
+    //    containerId : containerId
+    //  }
+    */
   }
 
   function isSafe(){

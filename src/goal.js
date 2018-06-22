@@ -1,7 +1,6 @@
-let Goal = function(name, job, eligibleTo, operationalizePriority, config){
+let Goal = function(name, job, operationalizePriority, config){
   const cf = config || {};
   this.name = name;
-  this.eligibleTo = eligibleTo;
   this.job = job;
   this.operationalizePriority = operationalizePriority;
   this.maximum = cf.maximum || 99;
@@ -12,6 +11,15 @@ Goal.prototype = function(){
     return ({
       assigned : []
     })
+  }
+
+  function dismiss(creep){
+    const owner = Game.rooms[creep.memory.ownedBy];
+    _.remove(
+      owner.memory.goals[creep.memory.goalIndex],
+      (goalMemory) => (goalMemory.assignedTo === creepName)
+    )
+    this.job.dismiss(creep);
   }
 
   function getPriority(room, goalMemory, alreadyHasThisGoal){
@@ -33,17 +41,17 @@ Goal.prototype = function(){
   }
 
   return {
+    dismiss : dismiss,
     initMemory : initMemory,
     getPriority : getPriority,
 }
 }();
 
-let MaintainEnergy = function(Job, eligibleTo){
+let MaintainEnergy = function(Job){
   Goal.call(
     this,
     'maintainEnergy', 
-    new Job(), 
-    eligibleTo,
+    new Job(),
     function(room, goalMemory, alreadyHasThisGoal){
       return {
         demand : (1 - room.energyAvailable / room.energyCapacityAvailable),
@@ -57,11 +65,10 @@ let MaintainEnergy = function(Job, eligibleTo){
 
 MaintainEnergy.prototype = Object.create(Goal.prototype);
 
-let MaintainController = function(Job, eligibleTo){
+let MaintainController = function(Job){
   Goal.call(this, 
     'maintainController', 
     new Job(),
-    eligibleTo, 
     function(room, goalMemory, alreadyHasThisGoal){
       return {
         demand : (room.controller.ticksToDowngrade <= 600) ? 1 : 0,
@@ -73,14 +80,10 @@ let MaintainController = function(Job, eligibleTo){
 
 MaintainController.prototype = Object.create(Goal.prototype);
 
-let UpgradeController = function(Job, eligibleTo){
+let UpgradeController = function(Job){
   Goal.call(this, 
     'upgradeController', 
-    new Job(
-
-      
-    ),
-    eligibleTo,
+    new Job(),
     function(room, goalMemory, alreadyHasThisGoal){
       return {
         demand : 0.25,
@@ -91,12 +94,11 @@ let UpgradeController = function(Job, eligibleTo){
 }
 UpgradeController.prototype = Object.create(Goal.prototype);
 
-let BuildSite = function(Job, eligibleTo, structureType){
+let BuildSite = function(Job, structureType){
   Goal.call(
     this, 
     'buildSite' + structureType, 
     new Job(structureType),
-    eligibleTo,
     function(room, goalMemory, alreadyHasThisGoal){
       return {
         demand : 0.5

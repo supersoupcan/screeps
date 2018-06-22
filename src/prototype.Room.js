@@ -2,13 +2,15 @@ const role = require('role');
 
 module.exports = function(){
   function init(){
-    this.memory.sources = [];
+    this.memory = Object.assign(this.memory, {
+      queue : [],
+      nextBuild : null,
+      [RESOURCE_ENERGY] : [],
+    })
+
     _.forEach(this.find(FIND_SOURCES), function(source){
       source.init();
     })
-
-    this.memory.queue = [];
-    this.memory.nextBuild = null;
 
     initNextPlan.call(this);
   }
@@ -90,8 +92,9 @@ module.exports = function(){
         }
       }
     }
-
+ 
     _.forEach(goals, (goal, index) => {
+      console.log(JSON.stringify(goal));
       if(goal.job.role === creep.memory.role){
         if(_.includes(this.memory.goal[index].assigned, creep.name)){
           //IF CREEP ALREADY HAS JOB
@@ -105,6 +108,8 @@ module.exports = function(){
       }
     });
 
+    console.log('it all seems so logical!');
+
     if(goalToBeat.index !== currentGoalIndex){
       if(Number.isInteger(currentGoalIndex)){
         _.remove(this.memory.goal[currentGoalIndex].assigned, function(creepName){
@@ -114,36 +119,88 @@ module.exports = function(){
       if(Number.isInteger(goalToBeat.index)){
         console.log(creep.name + ' assigned to ' + goals[goalToBeat.index].name + " (" + goalToBeat.priority + ")" );
         this.memory.goal[goalToBeat.index].assigned.push(creep.name);
+        console.log(JSON.stringify(goals[goalToBeat.index]));
         goals[goalToBeat.index].job.init(creep, goalToBeat.index);
       }
     }
+
+    console.log('it all seems so fun!');
   }
 
-  function provideSource(creep){
-    let safeSources = _.filter(this.memory.sources, { 'isSafe' : true });
-    let spaceIndex = -1;
-    let sourceId = null;
-    while(spaceIndex < 8 && !Boolean(sourceId)){
-      spaceIndex++;
-      _.forEach(safeSources, (sourceMemory, index) => {
-        if(sourceMemory.spaces[spaceIndex] === null){
-          sourceId = sourceMemory.id;
-          return false;
+  function provideExtraction(creep, extraction){
+    console.log('running this magnificent beast');
+    let extractionSiteId = null;
+    let finalOrderIndex = null;
+    let previous = false;
+
+    _.forEach(extraction.weightedOrders, (order, orderIndex) => {
+      let eligibleSites = _.filter(this.memory[extraction.resource], function(siteMemory){
+        const site = Game.getObjectById(siteMemory[order.targetId]);
+        const ofType = siteMemory.type === order.type;
+        if(ofType){
+          const addFilters = order.addFilters(site);
+          const isSafe = ('isSafe' in siteMemory) ? siteMemory.isSafe : false;
+          return (ofType && addFilters && isSafe);
+        }else{
+          return false
         }
       })
-      console.log('round ' + spaceIndex);
-    }
-  
 
-    let sourceIndex = _.findIndex(this.memory.sources, {id : sourceId});
-    this.memory.sources[sourceIndex].spaces[spaceIndex] = creep.name;
-    return sourceId;
+      console.log(JSON.stringify(eligibleSites));
+
+      let spaceIndex = -1;
+      let finalSiteIndex = null;
+      while(spaceIndex < 8 && !Boolean(extractionSiteId)){
+        spaceIndex++;
+        _.forEach(eligibleSites, (eligibleSiteMemory, eligibleSiteIndex) => {
+          if(eligibleSiteMemory.spaces[spaceIndex] === creep.name){
+            extractionSiteId = creep.memory.extractionSiteId;
+            previous = true;
+            return false;
+          }else if(eligibleSiteMemory.spaces[spaceIndex] === null){
+            extractionSiteId = eligibleSiteMemory[order.targetId];
+            finalSiteIndex = eligibleSiteIndex;
+            return false;
+          }
+        })
+      }
+
+      console.log(extractionSiteId);
+
+      if(Boolean(extractionSiteId)){
+        finalOrderIndex = orderIndex;
+        if(!previous){
+          eligibleSites[finalSiteIndex].spaces[spaceIndex] = creep.name;
+          let success = false;
+          _.forEach(this.memory[extraction.resource], (siteMemory, siteIndex) => {
+            _.forEach(siteMemory.spaces, (space, index) => {
+              if(space === creep.name){
+                space = null;
+                success = true;
+                return false;
+              }
+            })
+            if(success){
+              return false;
+            }
+          });
+        }
+        return false
+      }
+    })
+
+    console.log('FINAL', finalOrderIndex, extractionSiteId)
+
+    return {
+      index : finalOrderIndex,
+      id : extractionSiteId,
+    }
   }
   
   return {
     init : init,
     initNextPlan : initNextPlan,
     checkForNewGoal : checkForNewGoal,
-    provideSource : provideSource,
+    provideExtraction : provideExtraction
   }
 }();
