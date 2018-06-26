@@ -10,7 +10,7 @@ const ExtractorWorker = function(name, role, extraction, work, workSite){
 
 ExtractorWorker.prototype = function(){
   function init(creep, goalIndex){
-    console.log('initializing ' + creep.name)
+    console.log('initializing ' + creep.name + ' for ' + this.name);
     const owner = Game.rooms[creep.memory.ownedBy];
     creep.memory = Object.assign({}, {
       role : creep.memory.role,
@@ -18,7 +18,7 @@ ExtractorWorker.prototype = function(){
     },{
       goalIndex : goalIndex,
       isExtracting : true,
-      extractionSite : owner.provideExtraction(creep, this.extraction),
+      extractionSite : extraction.provide(creep, this.extraction),
       workSiteId : findWorkSite.call(this, creep)
     })
   }
@@ -29,7 +29,7 @@ ExtractorWorker.prototype = function(){
     })
 
     if(workSites.length > 0){
-      const final = workSites[_.random(workSites.length - 1)].id;
+      const final = workSites[0].id;
       console.log('setting workplace ' + final + ' for ' + this.name);
       return final;
     }else{
@@ -50,7 +50,13 @@ ExtractorWorker.prototype = function(){
 
   function dismiss(creep){
     let owner = Game.rooms[creep.memory.ownedBy];
-    owner.memory[this.extraction.resource].
+    _.forEach(owner.memory[this.extraction.resource], (siteMemory) => {
+      if(_.includes(siteMemory.spaces, (space) => space === creep.name)){
+        let indexToDelete = _.findIndex(siteMemory.space, (space) => space === creep.name);
+        siteMemory[indexToDelete] = null;
+        return false;
+      }
+    });
   }
 
   function run(creep){
@@ -66,13 +72,16 @@ ExtractorWorker.prototype = function(){
     }else{
       const workSite = Game.getObjectById(creep.memory.workSiteId);
       const important = this.work.call(creep, workSite, this.extraction.resource);
-      //console.log(important, workSite.structureType);
       switch(important){
         case ERR_NOT_IN_RANGE : {
           creep.moveTo(workSite);
           break;
         }
         case ERR_FULL : {
+          findWorkSite.call(this, creep);
+          break;
+        }
+        case ERR_INVALID_TARGET : {
           findWorkSite.call(this, creep);
           break;
         }
@@ -90,7 +99,7 @@ ExtractorWorker.prototype = function(){
 let HarvesterCarrier = function(){
   ExtractorWorker.call(
     this, 'harvesterCarrier', 'worker',
-    extraction.harvesterWorker,  
+    extraction.preset.harvesterWorker,  
     Creep.prototype.transfer,
     {
       find : FIND_MY_STRUCTURES,
@@ -110,7 +119,7 @@ HarvesterCarrier.prototype = ExtractorWorker.prototype;
 let HarvesterUpgrader = function(){
   ExtractorWorker.call(
     this, 'harvesterUpgrader', 'worker',
-    extraction.harvesterWorker,
+    extraction.preset.harvesterWorker,
     Creep.prototype.upgradeController,
     {
       find : FIND_MY_STRUCTURES,
@@ -125,7 +134,7 @@ HarvesterUpgrader.prototype = ExtractorWorker.prototype;
 let HarvesterBuilder = function(structureType){
   ExtractorWorker.call(
     this, 'harvesterBuilder_' + structureType, 'worker',
-    extraction.harvesterWorker,
+    extraction.preset.harvesterWorker,
     Creep.prototype.build,
     {
       find : FIND_MY_CONSTRUCTION_SITES,

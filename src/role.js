@@ -47,12 +47,12 @@ const worker = new Role(
 );
 const miner = new Role(
   'miner', 
-  [WORK], 
+  [WORK],
   4
 );
 
 const hauler = new Role(
-  'builder', 
+  'hauler', 
   [WORK, CARRY, CARRY, CARRY, CARRY, CARRY], 
   2,
 );
@@ -67,6 +67,7 @@ module.exports = {
 // ROLES
 // ~~~~~~
 // worker: upgrades controller, maintains controller, repair, (everything at low RLC)
+// hauler: distributes resources, and builds structures
 // miner: mines target standing ontop of container, repairs container when target is empty, 
-// hauler: distributes resources, builds structures,
+//
 */

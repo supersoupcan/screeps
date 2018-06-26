@@ -25,15 +25,12 @@ module.exports = [
     ],
   },
   {
-    build : [
-
-    ],
     creeps : [{
       role : role.worker,
       amount : 4,
     },
     {
-      role : role.carrier,
+      role : role.hauler,
       amount : 0,
     }
   ],

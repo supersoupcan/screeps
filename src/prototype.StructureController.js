@@ -5,12 +5,7 @@ module.exports = function(){
     
   }
 
-  function getPlan(){
-    return plan[this.level];
-  }
-
-  return({
+  return{
     init : init,
-    getPlan : getPlan
-  })
+  }
 }();

@@ -1,4 +1,3 @@
-const plan = require('plan');
 const role = require('role');
 
 module.exports = function(){
@@ -55,12 +54,13 @@ module.exports = function(){
           creepRoom.controller.getPlan().goals[creep.memory.goalIndex].dismiss(creep);
         }
         delete Memory.creeps[creepName];
+        creepRoom.populateQueue();
       }else{
         if(!creep.spawning){
           if(!creep.memory.hasOwnProperty('goalIndex')){
             creepRoom.checkForNewGoal(creep);
           }
-          creepRoom.controller.getPlan().goals[creep.memory.goalIndex].job.run(creep);
+          creepRoom.getPlan().goals[creep.memory.goalIndex].job.run(creep);
         }
       }
     })

@@ -86,7 +86,7 @@ let UpgradeController = function(Job){
     new Job(),
     function(room, goalMemory, alreadyHasThisGoal){
       return {
-        demand : 0.25,
+        demand : 0.1,
         assignmentFactor : 1.5,
       }
     }
@@ -100,8 +100,9 @@ let BuildSite = function(Job, structureType){
     'buildSite' + structureType, 
     new Job(structureType),
     function(room, goalMemory, alreadyHasThisGoal){
+      const demand = room.find(FIND_MY_STRUCTURES, { filter : { stuctureType : structureType }}).length > 0 ? 0.5 : 0;
       return {
-        demand : 0.5
+        demand : demand
       }
     }
   );
