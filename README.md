@@ -18,9 +18,6 @@ Use GitHub branches for adding experimental features
 Push to GitHub at the end of every work session
 Test extensively in Game before merging experimental branches
 
-use game constants when available and id/name hashlists for storing memory;
-ex: room.memory[STRUCTURE_SPAWN][spawnName];
-
 ## Key Features
 Dynamically reasses jobs based on goal priority
 Creep body ratios and jobs determined by role
