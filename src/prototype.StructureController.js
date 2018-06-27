@@ -1,9 +1,11 @@
+const plan = require('plan');
+
 module.exports = function(){
   function init(){
     
   }
 
-  return({
+  return{
     init : init,
-  })
+  }
 }();

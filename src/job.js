@@ -1,128 +1,152 @@
-const ExtractorMover = function(name, extract, resource, work, workSite){
-  this.role = 'worker';
+const extraction = require('extraction');
+
+const ExtractorWorker = function(name, role, extraction, work, workSite){
   this.name = name;
-  this.extract = extract;
-  this.resource = resource;
+  this.role = role;
+  this.extraction = extraction;
   this.work = work;
   this.workSite = workSite;
 }
 
-ExtractorMover.prototype = function(){
-  function init(creep, goalMemory){
-    creep.memory = Object.assign({},
-      {
-        role : creep.memory.role,
-        isExtracting : true,
-        extractionSiteId : this.findExtractionSite(creep),
-        workSiteId : this.findWorkSite(creep),
-      },
-      goalMemory.override
-    )
-  }
-
-  function findExtractionSite(creep){
-    switch(this.resource){
-      case RESOURCE_ENERGY : {
-        return creep.room.provideSource(creep)
-        break;
-      }
-    }
+ExtractorWorker.prototype = function(){
+  function init(creep, goalIndex){
+    console.log('initializing ' + creep.name + ' for ' + this.name);
+    const owner = Game.rooms[creep.memory.ownedBy];
+    creep.memory = Object.assign({}, {
+      role : creep.memory.role,
+      ownedBy : creep.memory.ownedBy,
+    },{
+      goalIndex : goalIndex,
+      isExtracting : true,
+      extractionSite : extraction.provide(creep, this.extraction),
+      workSiteId : findWorkSite.call(this, creep)
+    })
   }
 
   function findWorkSite(creep){
-    let workSites = this.creep.room.find(creep.workSite.find, {
-      filter : creep.workSite.filter
+    let workSites = Game.rooms[creep.memory.ownedBy].find(this.workSite.find, {
+      filter : this.workSite.filter
     })
 
-    return workSites[_.random(workSites.length)].id;
+    if(workSites.length > 0){
+      const final = workSites[0].id;
+      console.log('setting workplace ' + final + ' for ' + this.name);
+      return final;
+    }else{
+      console.log('no workplace found for ' + this.name);
+      Game.rooms[creep.memory.ownedBy].checkForNewGoal(creep);
+    }
   }
-
+  
   function isExtracting(creep){
-    if(creep.memory.isExtracting && creep.carry[creep.resource] == creep.carryCapacity){
+    if(creep.memory.isExtracting && creep.carry[this.extraction.resource] === creep.carryCapacity){
       creep.memory.isExtracting = false;
-    }
-    else if(!creep.memory.isExtracting && creep.carry[creep.resource] == 0){
-      console.log(creep.name + ' completing job loop');
+    }else if(!creep.memory.isExtracting && creep.carry[this.extraction.resource] === 0){
       creep.memory.isExtracting = true;
+      Game.rooms[creep.memory.ownedBy].checkForNewGoal(creep);
     }
-
     return creep.memory.isExtracting;
   }
 
+  function dismiss(creep){
+    let owner = Game.rooms[creep.memory.ownedBy];
+    _.forEach(owner.memory[this.extraction.resource], (siteMemory) => {
+      if(_.includes(siteMemory.spaces, (space) => space === creep.name)){
+        let indexToDelete = _.findIndex(siteMemory.space, (space) => space === creep.name);
+        siteMemory[indexToDelete] = null;
+        return false;
+      }
+    });
+  }
+
   function run(creep){
-    if(isExtracting(creep)){
-      const extractionSite = Game.getObjectById(creep.memory.extractionSiteId);
-      switch(this.extract.call(creep, extractionSite)){
-        case "ERR_NOT_IN_RANGE" : {
+    if(isExtracting.call(this, creep)){
+      const extractionSite = Game.getObjectById(creep.memory.extractionSite.id);
+      const method = this.extraction.weightedOrders[creep.memory.extractionSite.index].method;
+      switch(method.call(creep, extractionSite)){
+        case ERR_NOT_IN_RANGE : {
           creep.moveTo(extractionSite);
           break;
         }
       }
     }else{
       const workSite = Game.getObjectById(creep.memory.workSiteId);
-      switch(this.work.call(creep, workSite)){
-        case "ERR_NOT_IN_RANGE" : {
+      const important = this.work.call(creep, workSite, this.extraction.resource);
+      switch(important){
+        case ERR_NOT_IN_RANGE : {
           creep.moveTo(workSite);
+          break;
+        }
+        case ERR_FULL : {
+          findWorkSite.call(this, creep);
+          break;
+        }
+        case ERR_INVALID_TARGET : {
+          findWorkSite.call(this, creep);
           break;
         }
       }
     }
   }
 
-  return({
-    run : run,
+  return {
     init : init,
-  })
+    run : run,
+    dismiss : dismiss
+  }
 }();
 
-
-ExtractorMover.prototype.constructor = ExtractorMover;
-
-let harvester = new ExtractorMover(
-  'harvester', 
-  Creep.harvest, 
-  RESOURCE_ENERGY, 
-  Creep.transfer, 
-  {
-    find : FIND_MY_STRUCTURES,
-    filter : function(structure){
-      if(structure.structureType === STRUCTURE_EXTENSION || structureType === STRUCTURE_SPAWN){
-        return (structure.energy < structure.energyCapacity);
-      }else{
-        return false;
-      }
-    }
-  }
-);
-
-let upgrader = new ExtractorMover(
-  'upgrader',
-  Creep.harvest,
-  RESOURCE_ENERGY,
-  Creep.upgradeController,
-  {
-    find : FIND_MY_STRUCTURES,
-    filter : function(structure){
-      return structure.structureType === STRUCTURE_CONTROLLER
-    }
-  }
-)
-
-let Builder = function(construction_type){
-  ExtractorMover.call(this,'Builder',
-    Creep.harvest,
-    RESOURCE_ENERGY,
-    Creep.build,
+let HarvesterCarrier = function(){
+  ExtractorWorker.call(
+    this, 'harvesterCarrier', 'worker',
+    extraction.preset.harvesterWorker,  
+    Creep.prototype.transfer,
     {
-      find : FIND_MY_CONSTRUCTION_SITES,
-      filter : function(site){
-        return site.structureType = construction_type
+      find : FIND_MY_STRUCTURES,
+      filter : function(structure){
+        if(structure.structureType === STRUCTURE_EXTENSION || structure.structureType === STRUCTURE_SPAWN){
+          return (structure.energy < structure.energyCapacity);
+        }else{
+          return false;
+        }
       }
     }
   )
 }
 
+HarvesterCarrier.prototype = ExtractorWorker.prototype;
+
+let HarvesterUpgrader = function(){
+  ExtractorWorker.call(
+    this, 'harvesterUpgrader', 'worker',
+    extraction.preset.harvesterWorker,
+    Creep.prototype.upgradeController,
+    {
+      find : FIND_MY_STRUCTURES,
+      filter : function(structure){
+        return structure.structureType === STRUCTURE_CONTROLLER
+    }
+  }
+)}
+
+HarvesterUpgrader.prototype = ExtractorWorker.prototype;
+
+let HarvesterBuilder = function(structureType){
+  ExtractorWorker.call(
+    this, 'harvesterBuilder_' + structureType, 'worker',
+    extraction.preset.harvesterWorker,
+    Creep.prototype.build,
+    {
+      find : FIND_MY_CONSTRUCTION_SITES,
+      filter : (site) => site.structureType === structureType
+    }
+  )
+}
+
+HarvesterBuilder.prototype = ExtractorWorker.prototype;
+
 module.exports = {
-  Builder : Builder,
-  harvester : harvester,
+  HarvesterCarrier: HarvesterCarrier,
+  HarvesterUpgrader : HarvesterUpgrader,
+  HarvesterBuilder : HarvesterBuilder,
 }

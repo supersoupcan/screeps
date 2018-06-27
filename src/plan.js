@@ -1,29 +1,61 @@
 const goal = require('goal');
+const role = require('role');
+const job = require('job');
 
 module.exports = [
   {
-    creeps : {},
+    creeps : [],
+    goals : [],
   },
   {
-    creeps : {
-      worker : 4
-    },
+    creeps : [{
+      role : role.worker,
+      amount : 4,
+    }],
     goals : [
-      goal.maintainEnergy,
-      goal.maintainController,
-      goal.upgradeController,
+      new goal.MaintainEnergy(
+        job.HarvesterCarrier
+      ),
+      new goal.MaintainController(
+        job.HarvesterUpgrader
+      ),
+      new goal.UpgradeController(
+        job.HarvesterUpgrader
+      ),
     ],
   },
   {
-    creeps : {
-      worker : 4
+    creeps : [{
+      role : role.worker,
+      amount : 4,
     },
+    {
+      role : role.hauler,
+      amount : 0,
+    }
+  ],
     goals : [
-      goal.maintainEnergy,
-      goal.maintainController,
-      new goal.BuildConstructionSites(STRUCTURE_EXTENSIONS, 5),
-      new goal.BuildConstructionSites(STRUCTURE_ROAD, 4),
-      goal.upgradeController,
+      new goal.MaintainEnergy(
+        job.HarvesterCarrier,
+      ),
+      new goal.MaintainController(
+        job.HarvesterUpgrader,
+      ),
+      new goal.UpgradeController(
+        job.HarvesterUpgrader
+      ),
+      new goal.BuildSite(
+        job.HarvesterBuilder,
+        STRUCTURE_CONTAINER
+      ),
+      new goal.BuildSite(
+        job.HarvesterBuilder,
+        STRUCTURE_EXTENSION
+      ),
+      new goal.BuildSite(
+        job.HarvesterBuilder,
+        STRUCTURE_ROAD
+      )
     ]
   }
 ]

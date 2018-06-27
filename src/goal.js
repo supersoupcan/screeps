@@ -1,113 +1,119 @@
-const job = require('job');
-
-const Goal = function(name, job, priority, config){
+let Goal = function(name, job, operationalizePriority, config){
+  const cf = config || {};
   this.name = name;
   this.job = job;
-  this.priority = priority;
-  this.argvs = config.argvs || [];
-  this.maximum = config.maximum || 100;
+  this.operationalizePriority = operationalizePriority;
+  this.maximum = cf.maximum || 99;
 }
 
 Goal.prototype = function(){
-  function init(room){
-
-    /*Add override later
-    //let override = {};
-    //if(overrideArgsArr){
-      //override = this.override.apply(this, overrideArgsArr);
-    //}
-
-    const uniqueId = _.uniqueId(this.name + '_');
-    room.memory.goal[uniqueId] = Object.assign({
-      goal : this.name,
-      argvs : this.argvs,
-      assigned : [],
+  function initMemory(){  
+    return ({
+      assigned : []
     })
-    */
   }
 
-  function onCompletion(){
-    //Something;  
+  function dismiss(creep){
+    const owner = Game.rooms[creep.memory.ownedBy];
+    _.remove(
+      owner.memory.goals[creep.memory.goalIndex],
+      (goalMemory) => (goalMemory.assignedTo === creepName)
+    )
+    this.job.dismiss(creep);
   }
 
-  return ({
-    init : init,
-  })
-}();
+  function getPriority(room, goalMemory, alreadyHasThisGoal){
+    let cf = this.operationalizePriority(room, goalMemory, alreadyHasThisGoal);
 
+    const goalMemoryLength = goalMemory.assigned.length;
 
-const maintainEnergy = new Goal(
-  'maintain_energy',
-  job.harvester,
-  function(room){
-    return 5;
-  },{}
-)
+    const totalAssigned = cf.workers || alreadyHasThisGoal ? goalMemoryLength - 1 : goalMemoryLength;
+    const demand = cf.demand || 0;
+    const lowRange = cf.lowRange || 0;
+    const kill = Boolean(cf.kill) || false;
+    const assignmentFactor = cf.assignmentFactor || 1;
 
-const maintainController = new Goal(
-  'maintain_controller',
-  job.upgrader,
-  function(room){
-    return 5;
-  },{
-    maximum : 1
-  }
-)
-
-const upgradeController = new Goal(
-  'upgrade_controller',
-  job.upgrader,
-)
-
-let BuildConstructionSites = function(structureType, basePriority){
-  Goal.call(
-    this, 
-    'builder_' + structureType,
-    new job.Builder(structureType),
-    function(room){
-      return basePriority;
-    },
-  )
-}
-
-//upgrade controller has a low priority, 
-//to ensure that other jobs are done first
-
-module.exports = {
-  maintain_energy : maintainEnergy,
-  maintain_controller : maintainController,
-  upgrade_controller : upgradeController,
-  BuildConstructionSites : BuildConstructionSites,
-}
-
-/*
-
-const upgradeController = new Goal(
-  'upgradeController',
-  job.upgrader,
-  function(room){
-    return 5;
-  },
-  {
-    maximum : 1
-  }
-)
-
-const buildSite = new Goal(
-  'buildSite',
-  job.builder,
-  function(room){
-    return 5;
-  },
-  {
-    override : function(buildSiteId){
-      return({
-        workSiteId : buildSiteId,
-      })
+    if(kill){
+      return 0;
+    }else{
+      return (lowRange + (demand - demand*lowRange) / (1 + totalAssigned * assignmentFactor));
     }
   }
-)
-*/
 
-// A Priority takes in the current room of the goal, and runs an equation to see
-// how important a given goal is at any point.
+  return {
+    dismiss : dismiss,
+    initMemory : initMemory,
+    getPriority : getPriority,
+}
+}();
+
+let MaintainEnergy = function(Job){
+  Goal.call(
+    this,
+    'maintainEnergy', 
+    new Job(),
+    function(room, goalMemory, alreadyHasThisGoal){
+      return {
+        demand : (1 - room.energyAvailable / room.energyCapacityAvailable),
+        lowRange: 0.5,
+        kill: (room.energyAvailable === room.energyCapacityAvailable),
+        assignmentFactor : 2,
+      }
+    }
+  )
+};
+
+MaintainEnergy.prototype = Object.create(Goal.prototype);
+
+let MaintainController = function(Job){
+  Goal.call(this, 
+    'maintainController', 
+    new Job(),
+    function(room, goalMemory, alreadyHasThisGoal){
+      return {
+        demand : (room.controller.ticksToDowngrade <= 600) ? 1 : 0,
+        assignmentFactor : 10000,
+      }
+    }
+  )
+};
+
+MaintainController.prototype = Object.create(Goal.prototype);
+
+let UpgradeController = function(Job){
+  Goal.call(this, 
+    'upgradeController', 
+    new Job(),
+    function(room, goalMemory, alreadyHasThisGoal){
+      return {
+        demand : 0.1,
+        assignmentFactor : 1.5,
+      }
+    }
+  );
+}
+UpgradeController.prototype = Object.create(Goal.prototype);
+
+let BuildSite = function(Job, structureType){
+  Goal.call(
+    this, 
+    'buildSite' + structureType, 
+    new Job(structureType),
+    function(room, goalMemory, alreadyHasThisGoal){
+      const demand = room.find(FIND_MY_STRUCTURES, { filter : { stuctureType : structureType }}).length > 0 ? 0.5 : 0;
+      return {
+        demand : demand
+      }
+    }
+  );
+  this.structureType = structureType;
+}
+
+BuildSite.prototype = Object.create(Goal.prototype);
+
+module.exports = {
+  MaintainEnergy : MaintainEnergy,
+  MaintainController : MaintainController,
+  UpgradeController : UpgradeController,
+  BuildSite : BuildSite
+}

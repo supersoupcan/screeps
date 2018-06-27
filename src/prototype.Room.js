@@ -1,117 +1,147 @@
 const role = require('role');
-const job = require('job');
-const goal = require('goal');
+const base = require('base');
 const plan = require('plan');
 
 module.exports = function(){
   function init(){
-    this.memory.queue = [];
-    this.memory.goal = {};
-    this.memory.source = {};
+    this.memory = Object.assign(this.memory, {
+      queue : [],
+      nextBuild : null,
+      [RESOURCE_ENERGY] : [],
+    })
+
+    const spawns = this.find(FIND_MY_STRUCTURES, {
+      filter : { structureType : STRUCTURE_SPAWN}
+    })
+
+    if(spawns.length > 0){
+      this.memory.base = {
+        x : spawns[0].pos.x,
+        y : spawns[0].pos.y,
+        rotation : 0,
+      }
+    }else{
+      //find base location layout function, and give room a score;
+    }
 
     _.forEach(this.find(FIND_SOURCES), function(source){
       source.init();
     })
+
+    initNextPlan.call(this);
   }
 
-  function addToQueue(rolename){
-    this.memory.queue.push(rolename)
-  }
-
-  function initGoals(){
-    
-  }
-
-  function checkForNewJob(){
-    let currentGoals = plan[this.controller.level].goals;
-
-    let goalToBeat = {
-      goalName = null,
-      piority = -1
-    }
-
-    let currentGoalName = null;
-
-    _.forEach(currentGoals, function(goal, index){
-
+  function getOwned(){
+    return _.filter(Game.creeps, (creep) => {
+      return creep.memory.ownedBy === this.name;
     })
-
   }
 
+  function getPlan(){
+    return plan[this.controller.level];
+  }
 
-
-  /*
-  function checkForNewJob(creep){
-    let goalToBeat = {
-      goalId : null,
-      priority : -1,
+  function populateQueue(){
+    let currentlyOwned = {};
+    _.forEach(role, (data, roleName) => {
+      currentlyOwned[roleName] = 0;
+    })
+    _.forEach(getOwned.call(this), (creep) => {
+      currentlyOwned[creep.memory.role]++;
+    })
+    _.forEach(this.memory.queue, (requestedRole) => {
+      currentlyOwned[requestedRole]++;
+    })
+    if(this.memory.nextBuild){
+      currentlyOwned[this.memory.nextBuild.role]++;
     }
 
-    let currentGoalId = null;
+    _.forEach(getPlan.call(this).creeps, (creep) => {
+      const difference = creep.amount - currentlyOwned[creep.role.name];
+      if(difference > 0){
+        console.log('adding ' + difference + ' ' + creep.role.name + 's to queue');
+        _.times(difference, () => {this.memory.queue.push(creep.role.name)});
+      }else if(difference < 0){
+        // do something?
+      }
+    })
+  }
 
-    function higherPriority(goalDataToCheck, goalId){
-      const priority = goalDataToCheck.priority(this);
+  function initNextPlan(){
+    if(this.memory.base){
+      base.standard.planConstruction(this);
+    }
+    console.log('room ' + this.name + ' changed level to ' + this.controller.level);
+
+    const nextPlan = this.getPlan.call(this);
+    this.memory.level = this.controller.level;
+    
+    this.memory.goal = nextPlan.goals.map((goal) => {
+      return goal.initMemory();
+    });
+    _.forEach(getOwned.call(this), (creep) => {
+      checkForNewGoal.call(this, creep);
+    });
+
+    populateQueue.call(this);
+  }
+
+  function checkForNewGoal(creep){
+    const goals = getPlan.call(this).goals;
+    let currentGoalIndex = null;
+    let goalToBeat = {
+      index : null,
+      priority : -1
+    }
+
+    function higherPriority(goal, index, alreadyHasThisGoal){
+      const priority = goal.getPriority(
+        this, 
+        this.memory.goal[index],
+        alreadyHasThisGoal
+      );
+
       if(priority > goalToBeat.priority){
         goalToBeat = {
-          goalId : goalId,
+          index : index,
           priority : priority
         }
       }
     }
-
-    _.forEach(this.memory.goal, function(goalMemory, goalId){
-      //If goal is currentGoal
-      const goalData = goal[goalMemory.name];
-
-      if(goalData.job.role === creep.role){
-        if(_.includes(goalMemory.assigned, creep.name)){
-          currentGoalId = goalId;
-          higherPriority(goalData, goalId);
-        }else if(goalMemory.assigned.length < goalData.maximum){
-          higherPriority(goalData, goalId);
+ 
+    _.forEach(goals, (goal, index) => {
+      if(goal.job.role === creep.memory.role){
+        if(_.includes(this.memory.goal[index].assigned, creep.name)){
+          //IF CREEP ALREADY HAS JOB
+          currentGoalIndex = index;
+          higherPriority.call(this, goal, index, true);
+        }else if(this.memory.goal[index].assigned.length < goal.maximum){
+          //CHECK JOBS MAXIMUM LIMIT HAS NOT BEEN TAKEN
+          //MIGHT BE ABLE TO GET RID OF THIS WITH THE PRIORITY FUNCTIONS
+          higherPriority.call(this, goal, index, false);
         }
       }
-    })
+    });
 
-    if(goalToBeat.goalId !== currentGoalId){
-      if(currentGoalId){
-        _.remove(this.memory.goal[currentGoalId].assigned, function(creepName){
+    if(goalToBeat.index !== currentGoalIndex){
+      if(Number.isInteger(currentGoalIndex)){
+        _.remove(this.memory.goal[currentGoalIndex].assigned, function(creepName){
           return creepName === creep.name;
         })
       }
-      if(jobToBeat.goalId){
-        const nextGoalMemory = this.memory.goal[jobToBeat.goalId];
-        const nextGoalData = goal[nextGoalMemory.name];
-
-        nextGoalMemory.assigned.push(creep.name);
-        nextGoalData.job.init(creep, nextGoalMemory.override);
+      if(Number.isInteger(goalToBeat.index)){
+        console.log(creep.name + ' assigned to ' + goals[goalToBeat.index].name + " (" + goalToBeat.priority + ")" );
+        this.memory.goal[goalToBeat.index].assigned.push(creep.name);
+        goals[goalToBeat.index].job.init(creep, goalToBeat.index);
       }
     }
   }
-  */
 
-  function provideSource(creep){
-    let openSourceId = false;
-    _.forEach(this.memory.sources, function(source, sourceId){
-      if(source.isSafe){
-        _.forEach(source.spots, function(spot){
-          if(!spot.assigned){
-            spot = {
-              assigned : true,
-              name : creep.name,
-            };
-            openSourceId = sourceId;
-            return false;
-          }
-        })
-      }
-      return openSourceId;
-    });
-  }
-
-  return({
-    addToQueue : addToQueue,
-    addGoal : addGoal,
+  return {
     init : init,
-  })
+    getPlan : getPlan,
+    populateQueue : populateQueue,
+    initNextPlan : initNextPlan,
+    checkForNewGoal : checkForNewGoal,
+  }
 }();

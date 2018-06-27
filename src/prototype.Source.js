@@ -2,15 +2,16 @@ const utils = require('utils');
 
 module.exports = function(){
   function init(){
-    console.log('Initiating source '+ this.id);
-    this.room.memory.source[this.id] = {
-      isSafe : this.isSafe(),
-      spots : this.availableSpots(),  
-    }
+    this.room.memory[RESOURCE_ENERGY].push({
+      type : 'source',
+      sourceId : this.id,
+      isSafe: this.isSafe(),
+      spaces: this.availableSpace(this),
+    })
   }
 
-  function availableSpots(){
-    const capacityData = utils.lookAround(this, 1, function(tile){
+  function availableSpace(target){
+    const capacityData = utils.lookAround(target, 1, function(tile){
       return _.every(tile, function(object){
         switch(object.type){
           case 'terrain' : {
@@ -31,9 +32,19 @@ module.exports = function(){
         capacity++;
       }
     })
-    return _.times(capacity, _.constant({
-      assigned : false,
-    }))
+    return _.times(capacity, _.constant(null))
+  }
+
+  function develop(){
+    /*  upgrade source so that it has a dedicated miner and container.
+    //
+    //  when finished update memory
+    //  {
+    //    type : "developedSource"
+    //    minerId : null,
+    //    containerId : containerId
+    //  }
+    */
   }
 
   function isSafe(){
@@ -58,6 +69,6 @@ module.exports = function(){
   return{
     init : init,
     isSafe : isSafe,
-    availableSpots : availableSpots
+    availableSpace : availableSpace,
   }
 }();
