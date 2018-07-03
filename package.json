@@ -22,6 +22,8 @@
   "homepage": "https://github.com/supersoupcan/screeps#readme",
   "devDependencies": {
     "grunt": "^1.0.3",
+    "grunt-contrib-clean": "^1.1.0",
+    "grunt-contrib-copy": "^1.0.0",
     "grunt-screeps": "^1.4.0"
   }
 }
