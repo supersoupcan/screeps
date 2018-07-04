@@ -1,4 +1,4 @@
-const roles = require('model_roles');
+const roles = require('models_roles');
 
 module.exports = function(){
   const setters = {
@@ -10,6 +10,11 @@ module.exports = function(){
   const getters = {
     get goals(){
       return this.room.memory.goals;
+    },
+    get owned(){
+      return _.filter(Game.creeps, (creep) => {
+        creep.memory.ownerId = this.name;
+      })
     }
   }
 
@@ -62,6 +67,34 @@ module.exports = function(){
     return this.memory.providers[resource]
   }
 
+  function populateQueue(){
+    let populationCount = {};
+    _.forEach(this.memory.roles, (role, roleName) => {
+      populationCount[roleName] = 0; 
+    })
+    _.forEach(this.owned, (creep) => {
+      populationCount[creep.role]++;
+    })
+    _.forEach(this.memory.queue, (role) => {
+      populationCount[role]++;
+    })
+    if(this.memory.nextSpawn){
+      populationCount[this.memory.nextSpawn.role]++;
+    }
+    _.forEach(this.memory.roles, (role, roleName) => {
+      const difference = role.amount - populationCount[roleName];
+      if(difference > 0){
+        _.times(difference, () => this.memory.queue.push(roleName));
+      }else if (difference < 0){
+        //do something in the future perhaps
+      }
+    })
+  }
+
+  function levelChange(){
+
+  }
+
   function getExtractionTargets(resource, provider){
     let eligibleTargets = [];
     _.forEach(this.memory.providers[resource], (providerMemory, index) => {
@@ -79,25 +112,27 @@ module.exports = function(){
   }
 
   function addRole(role, amount){
-    if(!role.name in this.memory._roles[role]){
-      this.memory._roles[role.name] = role.init();
+    if(!role.name in this.memory.roles[role]){
+      this.memory.roles[role.name] = role.init();
     }
-    this.memory._roles[role.name].amount += amount || 1;
+    this.memory.roles[role.name].amount += amount || 1;
   }
 
   function init(){
-    this.memory._goals = {};
-    this.memory._roles = {};
-    this.memory._providers = {};
+    this.memory.goals = {};
+    this.memory.roles = {};
+    this.memory.providers = {};
   }
 
   const public = {
     addGoal : addGoal,
     addRole : addRole,
+    populateQueue : populateQueue,
     findGoal : findGoal,
     getProviders : getProviders,
     getExtractionTargets : getExtractionTargets,
     init : init,
+    levelChange : levelChange,
   }
 
   return Object.assign({}, getters, setters, public);

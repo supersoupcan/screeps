@@ -1,2 +1,2 @@
-_.assignIn(Creep.prototype, require('prototype_creep'));
-_.assignIn(Room.prototype, require('prototype_room'));
+_.assignIn(Creep.prototype, require('prototypes_creep'));
+_.assignIn(Room.prototype, require('prototypes_room'));

@@ -1,5 +1,6 @@
-const Job = require('model_Job');
-const extraction = require('model_extraction');
+const Job = require('models_Job');
+const extraction = require('models_extraction');
+const jobLogic = require('models_jobLogic');
 
 const Goal = function(name, roles, operationalize){
   this.name = name;
@@ -22,10 +23,6 @@ Goal.prototype = function(){
       room.goals[this.name].assignments.splice(indexToRemove, 1);
     }
     creep.goal = null;
-  }
-
-  function isCurrentlyAssigned(room, creep){
-    return _.includes(room.memory.goals[creep.goal].assignment, creep.name);
   }
 
   function getPriority(room, creep){
@@ -61,11 +58,11 @@ Goal.prototype = function(){
 const maintainEnergy = new Goal('maintainEnergy', {
   'hauler' : {
     factor : 1,
-    job : new Job(logic.standard, haulerEnergy,),
+    job : new Job(jobLogic.standard, extraction.haulerEnergy,),
   },
   'worker' : {
     factor : 0.5,
-    job : new Job(logic.standard, workerEnergy),
+    job : new Job(jobLogic.standard, extraction.workerEnergy),
   },
   function(room){
     return {
