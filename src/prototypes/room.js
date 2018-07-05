@@ -1,16 +1,7 @@
 const roles = require('models_roles');
 
 module.exports = function(){
-  const setters = {
-    set goals(goals){
-      this.room.memory.goals = goals;
-    }
-  }
-
   const getters = {
-    get goals(){
-      return this.room.memory.goals;
-    },
     get owned(){
       return _.filter(Game.creeps, (creep) => {
         creep.memory.ownerId = this.name;
@@ -18,12 +9,20 @@ module.exports = function(){
     }
   }
 
+  function init(){
+    this.memory.goals = {};
+    this.memory.roles = {};
+    this.memory.spawn = {};
+    this.memory.extraction = {};
+    this.memory.layout = {};
+  }
+
   function addGoal(goal){
-    if(goal.name in this.goals){
+    if(goal.name in this.memory.goals){
       console.log("Can't add " + goal.name + "to room to " 
         + this.name + ": already assigned");
     }else{
-      goal.init(room);
+      room.memory[goal.name] = goal.initRoomMemory();
     }
   }
 
@@ -32,39 +31,35 @@ module.exports = function(){
       name : null,
       priority : 0
     };
-
-    _.forEach(this.goals, (goal) => {
+    _.forEach(this.memory.goals, (goal) => {
       const currentPriority = goal.getPriority(room, creep);
       if(currentPriority > goalToBeat.priority){
         goalToBeat.name = goal.name;
-        prioirty = currentPriority;
+        priorty = currentPriority;
       }
+      //TODO: overide and break if creep priority is greater then one currently assigned to something; 
     })
-
-    if(creep.goal !== goalToBeat.name && creep.goal){
-      const indexToRemove = _.findIndex(this.goals[creep.goal].assignments, (goal) => {
+    if(creep.memory.goal && creep.memory.goal !== goalToBeat.name ){
+      const indexToRemove = _.findIndex(this.memory.goals[creep.memory.goal].assignments, (goal) => {
         return (goal.creepName === creep.name)
       })
-
-      this.goals[creep.goal].assigned.splice(indexToRemove, 1);
+      this.memory.goals[creep.goal].assignments.splice(indexToRemove, 1);
     }
-      
-    this.goals[goalToBeat].assignments.push({
+    this.memory.goals[goalToBeat].assignments.push({
       creepName : creep.name
     })
-
     creep.goal = goalToBeat.name;
   }
 
-  function getProviders(resource, type){
+  function getExtraction(resource, type){
     if(type){
       return _.filter(
-        this.memory.providers[resource], 
+        this.extractionMemory[resource], 
         (provider) => provider.type === type
       )
     }
 
-    return this.memory.providers[resource]
+    return this.memory.extraction[resource];
   }
 
   function populateQueue(){
@@ -75,29 +70,25 @@ module.exports = function(){
     _.forEach(this.owned, (creep) => {
       populationCount[creep.role]++;
     })
-    _.forEach(this.memory.queue, (role) => {
+    _.forEach(this.memory.spawn.queue, (role) => {
       populationCount[role]++;
     })
-    if(this.memory.nextSpawn){
-      populationCount[this.memory.nextSpawn.role]++;
+    if(this.memory.spawn.next){
+      populationCount[this.memory.spawn.next.role]++;
     }
     _.forEach(this.memory.roles, (role, roleName) => {
       const difference = role.amount - populationCount[roleName];
       if(difference > 0){
-        _.times(difference, () => this.memory.queue.push(roleName));
+        _.times(difference, () => this.memory.spawn.queue.push(roleName));
       }else if (difference < 0){
         //do something in the future perhaps
       }
     })
   }
 
-  function levelChange(){
-
-  }
-
   function getExtractionTargets(resource, provider){
     let eligibleTargets = [];
-    _.forEach(this.memory.providers[resource], (providerMemory, index) => {
+    _.forEach(this.memory.extraction[resource], (providerMemory, index) => {
       if(providerMemory.type === provider.type){
         const targetMemory = providerMemory[provider.target];
         const filter = provider.filter(Game.getObjectById(targetMemory.id));
@@ -111,6 +102,16 @@ module.exports = function(){
     return eligibleTargets;
   }
 
+  function countExtractionTargets(resource, countType, isSafe){
+    let count = 0;
+    _.forEach(this.memory.extraction[resource], (type) => {
+      if(type === countType && type.isSafe === isSafe){
+        count++;
+      }
+    })
+    return count;
+  }
+
   function addRole(role, amount){
     if(!role.name in this.memory.roles[role]){
       this.memory.roles[role.name] = role.init();
@@ -118,18 +119,13 @@ module.exports = function(){
     this.memory.roles[role.name].amount += amount || 1;
   }
 
-  function init(){
-    this.memory.goals = {};
-    this.memory.roles = {};
-    this.memory.providers = {};
-  }
-
   const public = {
     addGoal : addGoal,
     addRole : addRole,
     populateQueue : populateQueue,
     findGoal : findGoal,
-    getProviders : getProviders,
+    getExtraction : getExtraction,
+    countExtractionTargets: countExtractionTargets,
     getExtractionTargets : getExtractionTargets,
     init : init,
     levelChange : levelChange,

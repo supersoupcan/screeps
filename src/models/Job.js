@@ -9,12 +9,12 @@ Job.prototype = function(){
   const getters = {};
   const setters = {};
   
-  function dismiss(creep){
+  function dismissCreep(creep){
 
   }
 
   const public = {
-    dismiss : dismiss
+    dismissCreep : dismissCreep
   };
   
   return Object.assign({}, setters, getters, public);

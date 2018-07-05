@@ -1,47 +1,47 @@
 const standard = function(){
   function init(creep){
+    creep.memory.job = {};
     creep.memory.job.isExtracting = true;
-    this.extraction.provide(creep);
-    this.worksite.provide(creep);
+    this.extraction.provideCreep(creep);
+    this.worksite.provideCreep(creep);
   }
 
   function checkExtracting(creep){
-    if(creep.isFull() && creep.job.isExtracting){
-      creep.job.isExtracting = falsed;
-    }else if(!creep.has(this.extraction.resource) && !creep.job.isExtracting){
-      creep.job.isExtracting = true;
+    const isExtracting = creep.memory.job.isExtracting;
+    if(creep.isFull() && isExtracting){
+      isExtracting = false;
+    }else if(!creep.has(this.extraction.resource) && !isExtracting){
+      isExtracting = true;
     }
-    return creep.job.isExtracting;
+    return isExtracting;
   }
 
   function run(creep){
-    if(!creep.memory.extraction){
-      this.extraction.provide(creep);
-    }
+    if(!creep.job.extraction) this.extraction.provideCreep(creep);
+    if(!creep.job.worksite) this.worksite.provideCreep(creep);
 
     if(checkExtracting.call(this, creep)){
-      const extractionSite = Game.getObjectById(creep.memory.extractionSite.id);
+      const target = Game.getObjectById(creep.memory.extraction.targetId);
       const method = this.extraction.providers[creep.memory.extraction.type].method;
-      switch(method.call(creep, extractionSite)){
+      switch(method.call(creep, target)){
         case ERR_NOT_IN_RANGE : {
-          creep.moveTo(extractionSite);
+          creep.moveTo(target);
           break;
         }
       }
     }else{
-      const workSite = Game.getObjectById(creep.memory.workSiteId);
-      const important = this.work.call(creep, workSite, this.extraction.resource);
-      switch(important){
+      const target = Game.getObjectById(creep.job.workSite.targetId);
+      switch(method.call(creep, target, this.extraction.resource)){
         case ERR_NOT_IN_RANGE : {
-          creep.moveTo(workSite);
+          creep.moveTo(target);
           break;
         }
         case ERR_FULL : {
-          findWorkSite.call(this, creep);
+          this.worksite.provide(creep);
           break;
         }
         case ERR_INVALID_TARGET : {
-          findWorkSite.call(this, creep);
+          this.worksite.provide(creep);
           break;
         }
       }

@@ -1,11 +1,2 @@
-Goal assignement is handled by rooms
-
-Goals prioritize a certian creep role, but will still be assigned to creeps of a less optimal role
-
-In the case that a creep of an optimal role becomes available, and searches for a job, 
-that creep will override the job of the creep of a suboptimal role;
-
-Goals determine jobs which lead to a collective outcome;
-
-ManageEnergy fills extensions, and spawns with energy;
-It uses two jobs: HarvesterCarrier (worker) and Carrier(worker, hauler);
+The evaluateRoles A rooms goals are used to determine the amount of roles to spawn.
+iterates through goals,
