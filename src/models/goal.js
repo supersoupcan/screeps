@@ -2,6 +2,7 @@ const Job = require('models_Job');
 const extraction = require('models_extraction');
 const worksite = require('models_worksite');
 const jobLogic = require('models_jobLogic');
+const planner = require('models_planner');
 
 const Goal = function(name, roles, operationalize){
   this.name = name;
@@ -10,10 +11,14 @@ const Goal = function(name, roles, operationalize){
 }
 
 Goal.prototype = function(){
-  function initRoomMemory(){
-    return {
-      assignments : []
-    };
+  function getMemory(room){
+    return room.memory.goals[this.name];
+  }
+
+  function initRoomMemory(room){
+    let base = {};
+    base.assignments = [];
+    return base;
   }
 
   function dismissCreep(room, creep){
@@ -28,19 +33,24 @@ Goal.prototype = function(){
   }
 
   function calculatePriority(room, creep){
-    if(creep.role in this.roles){
+    if(creep.memory.role in this.roles){
       const cf = this.operationalize(room, creep);
-      const goalMemory = room.memory.goals[this.name];
-      const alreadyAssigned = _.includes(goalMemory.assignments, creep.name);
-      const assignedCount = alreadyAssigned ? goalMemory.assignments.length - 1 
-        : goalMemory.assignments.length
+      const memory = getMemory.call(this, room); 
+      const completeOn = cf.completeOn || false;
+      const alreadyAssigned = _.includes(memory.assignments, creep.name);
+      const assignedCount = alreadyAssigned ? memory.assignments.length - 1 
+        : memory.assignments.length
       const demand = cf.demand || 0;
       const lowestRange = cf.lowestRange || 0;
       const assignedFactor = cf.assignedFactor || 1;
       const roleFactor = this.roles[creep.role].factor;
       const kill = cf.kill || false;
 
-      if(kill){
+
+      if(completeOn){
+        planner.completionCallback(room, this);
+        return 0;
+      }else if(kill){
         return 0;
       }
       return lowestRange + (demand - demand*lowestRange) * roleFactor / (1 + assignedCount * assignedFactor);
@@ -64,7 +74,7 @@ const maintainEnergy = new Goal('maintainEnergy', {
   },
   'worker' : {
     priority : 0.5,
-    job : new Job(jobLogic.standard, extraction.workerEnergy, worksite.energyMaintananceSite)
+    job : new Job(jobLogic.standard, extraction.workerEnergy, worksite.energyMaintananceSite),
   },
   function(room){
     return {
@@ -86,6 +96,7 @@ const upgradeController = new Goal('upgradeController', {
   },
   function(room){
     return {
+      completeOn : room.controller.level >= room.planner.controller.level,
       demand : 0.1,
       assignedFactor : 1.1,
     }
@@ -115,16 +126,17 @@ const builder = new Goal('build', {
     job : new Job(logic.standard, extraction.haulerEnergy, worksite.buildSite)
   },
   'worker' : {
-    priority : 0.5,
-    jot : new Job(logic.standard, extraction.workerEnergy, worksite.buildSite)
-  },
+      priority : 0.5,
+      job : new Job(logic.standard, extraction.workerEnergy, worksite.buildSite)
+  }},
   function(room){
     return {
-      demand : room.find(FIND_MY_CONSTRUCTION_SITES).length > 0 ? 0.5 : 0,
+      completeOn : room.find(FIND_MY_CONSTRUCTION_SITES).length === 0,
+      demand : 0.5,
       assignedFactor : 1.1
     }
-  }
-})
+  },
+)
 
 
 /*

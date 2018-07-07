@@ -42,6 +42,21 @@ const Extraction = function(resource, providers){
 }
 
 Extraction.prototype = function(){
+  function countProviders(room){
+    let counts = {};
+    _.forEach(this.priority, (type) => {
+      counts[type] = 0;
+    })
+
+    _.forEach(room.memory.extraction[this.resource], (extraction) => {
+      if(_.includes(this.priority, extraction.type)){
+        counts[extraction.type]++;
+      }
+    })
+
+    return counts;
+  }
+
   function findPriority(type){
     return _.findIndex(this.priority, (priorityType) => {
       return (type === priorityType);
@@ -119,6 +134,7 @@ Extraction.prototype = function(){
 
   return {
     provide : provide,
+    countProviders : countProviders,
     dismissCreep : dismissCreep,
     findPriority : findPriority,
   }

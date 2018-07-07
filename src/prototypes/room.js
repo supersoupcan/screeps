@@ -1,4 +1,4 @@
-const roles = require('models_roles');
+const goals = require('models_goals');
 
 module.exports = function(){
   const getters = {
@@ -10,20 +10,14 @@ module.exports = function(){
   }
 
   function init(){
+    this.memory.plan = {};
     this.memory.goals = {};
-    this.memory.roles = {};
     this.memory.spawn = {};
     this.memory.extraction = {};
-    this.memory.layout = {};
-  }
-
-  function addGoal(goal){
-    if(goal.name in this.memory.goals){
-      console.log("Can't add " + goal.name + "to room to " 
-        + this.name + ": already assigned");
-    }else{
-      room.memory[goal.name] = goal.initRoomMemory();
-    }
+    
+    planner.addGoal(this, goals.maintainEnergy,);
+    planner.addGoal(this, goals.upgradeController);
+    planner.addGoal(this, goals.maintainController);
   }
 
   function findGoal(creep){
@@ -35,7 +29,7 @@ module.exports = function(){
       const currentPriority = goal.getPriority(room, creep);
       if(currentPriority > goalToBeat.priority){
         goalToBeat.name = goal.name;
-        priorty = currentPriority;
+        priority = currentPriority;
       }
       //TODO: overide and break if creep priority is greater then one currently assigned to something; 
     })
@@ -64,7 +58,7 @@ module.exports = function(){
 
   function populateQueue(){
     let populationCount = {};
-    _.forEach(this.memory.roles, (role, roleName) => {
+    _.forEach(this.memory.quota.roles, (role, roleName) => {
       populationCount[roleName] = 0; 
     })
     _.forEach(this.owned, (creep) => {
@@ -76,7 +70,7 @@ module.exports = function(){
     if(this.memory.spawn.next){
       populationCount[this.memory.spawn.next.role]++;
     }
-    _.forEach(this.memory.roles, (role, roleName) => {
+    _.forEach(this.memory.quota.roles, (role, roleName) => {
       const difference = role.amount - populationCount[roleName];
       if(difference > 0){
         _.times(difference, () => this.memory.spawn.queue.push(roleName));
@@ -112,23 +106,13 @@ module.exports = function(){
     return count;
   }
 
-  function addRole(role, amount){
-    if(!role.name in this.memory.roles[role]){
-      this.memory.roles[role.name] = role.init();
-    }
-    this.memory.roles[role.name].amount += amount || 1;
-  }
-
   const public = {
-    addGoal : addGoal,
-    addRole : addRole,
+    init : init,
     populateQueue : populateQueue,
     findGoal : findGoal,
     getExtraction : getExtraction,
     countExtractionTargets: countExtractionTargets,
     getExtractionTargets : getExtractionTargets,
-    init : init,
-    levelChange : levelChange,
   }
 
   return Object.assign({}, getters, setters, public);

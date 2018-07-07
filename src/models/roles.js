@@ -1,16 +1,46 @@
-const Role = function(name, priority, body){
+const Role = function(name, body){
   this.name = name;
-  this.priority = priority;
-  this.body = body;
+  this.body = {
+      
+    moveRatio : body.moveRatio || 2,
+    repeat : body.repeat || [CARRY, WORK],
+  }
 }
 
 Role.prototype = function(){
+  function create(maxEnergy, isRoad){
+    const movePartsPerOtherPart = isRoad ? this.body.moveRatio*2 : this.body.moveRatio;
+    let body = [];
+    let energyCost = 0;
+    let i = 0;
+    let p = 0;
+    let nextPart = null;
 
+    do{
+      if(nextPart){
+        body.push(nextPart);
+        energyCost += BODYPART_COST[nextPart];
+      }
 
+      if(i % movePartsPerOtherPart === 0){
+        nextPart = MOVE;
+      }else{
+        nextPart = this.body.repeat[p % this.body.repeat.length];
+        p++;
+      }
+      i++;
+    }while(energyCost + BODYPART_COST[nextPart] < maxEnergy);
 
-  const public = {}
-  
-  return Object.assign({}, public);
+    return ({
+      role : this.name,
+      body : body,
+      energyCost : energyCost,
+    })
+  }
+
+  return {
+    create : create,
+  }
 }();
 
 const worker = new Role('worker', {

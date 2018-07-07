@@ -1,2 +1,0 @@
-The evaluateRoles A rooms goals are used to determine the amount of roles to spawn.
-iterates through goals,
